@@ -21,7 +21,7 @@ const config: PlaywrightTestConfig = {
   ],
 
   use: {
-    baseURL: 'https://demo.alphabin.co/',
+    baseURL: 'https://storedemo.testdino.com/',
     headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
