@@ -13,10 +13,10 @@ class AllProductsPage extends BasePage{
 
     locators = {
         allProductsTitle: `//h1[text()="All Products"]`,
-        nthProduct: `[href*="/product-detail/product"]`,
-        nthProductName: `[href*="/product-detail/product"] h2`,
-        nthProductPrice: `[href*="/product-detail/product"] p`,
-        nthProductReviewCount: `[href*="/product-detail/product"] h2 + div span.text-sm`,
+        nthProduct: `[href*="/product/"]`,
+        nthProductName: `[href*="/product/"] h2`,
+        nthProductPrice: `[href*="/product/"] p`,
+        nthProductReviewCount: `[href*="/product/"] h2 + div span.text-sm`,
         nthProductWishlistIcon: '[aria-label="heart"]',
         nthProductWishlistIconCount: '.bg-orange-100'
         

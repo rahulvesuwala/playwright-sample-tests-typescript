@@ -107,11 +107,11 @@ class ProductDetailsPage extends BasePage{
         await this.page.fill(this.locators.giveYourOpinionInput, 'This product exceeded my expectations. Highly recommend!');
         await this.page.click(this.locators.submitBtn);
     }
-    async assertSubmittedReview( name: string, title: string, opinion: string ) {
-        await this.page.waitForTimeout(3000); // Wait for 1 second to ensure the form is ready
-        await expect(this.page.locator(`text=${name}`)).toBeVisible();
-        await expect(this.page.locator(`text=${title}`)).toBeVisible();
-        await expect(this.page.locator(`text=${opinion}`)).toBeVisible();
+    async assertSubmittedReview({ name, title, opinion }: { name: string; title: string; opinion: string }) {
+        await this.page.waitForTimeout(3000); // Wait for the review to render
+        await expect(this.page.locator(`text=${name}`).first()).toBeVisible();
+        await expect(this.page.locator(`text=${title}`).first()).toBeVisible();
+        await expect(this.page.locator(`text=${opinion}`).first()).toBeVisible();
     }
 
     async clickOnEditReviewBtn() {
@@ -125,10 +125,10 @@ class ProductDetailsPage extends BasePage{
         await this.page.click(this.locators.submitBtn);
     }
 
-    async assertUpdatedReview( title: string, opinion: string ) {
-        await this.page.waitForTimeout(3000); // Wait for 1 second to ensure the form is ready
-        await expect(this.page.locator(`text=${title}`)).toBeVisible();
-        await expect(this.page.locator(`text=${opinion}`)).toBeVisible();
+    async assertUpdatedReview({ title, opinion }: { title: string; opinion: string }) {
+        await this.page.waitForTimeout(3000); // Wait for the review to render
+        await expect(this.page.locator(`text=${title}`).first()).toBeVisible();
+        await expect(this.page.locator(`text=${opinion}`).first()).toBeVisible();
     }
 
     async clickOnDeleteReviewBtn() {

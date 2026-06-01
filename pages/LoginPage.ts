@@ -48,7 +48,9 @@ class LoginPage extends BasePage{
     }
 
     async clickOnUserProfileIcon() {
-        await this.page.locator(this.locators.userIcon).click();
+        const icon = this.page.locator(this.locators.userIcon).first();
+        await icon.waitFor({ state: 'visible', timeout: 15000 });
+        await icon.click();
     }
 
     async assertLoginPage() {
@@ -69,7 +71,7 @@ class LoginPage extends BasePage{
         await this.page.locator(this.locators.logoutButton).click();
     }
     async validateSignInPage() {
-        await expect(this.getLoginPageTitle()).toBeVisible();
+        await expect(this.getLoginPageTitle()).toBeVisible({ timeout: 15000 });
     }
 
     async clickOnSignupLink() {

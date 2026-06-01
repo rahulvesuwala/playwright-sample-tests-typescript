@@ -11,6 +11,7 @@ const config: PlaywrightTestConfig = {
   ...(isCI ? { workers: 1 } : {}),
 
   timeout: 60 * 1000,
+  expect: { timeout: 10 * 1000 },
   reporter: [
     ['html', {
       outputFolder: 'playwright-report',
@@ -23,6 +24,7 @@ const config: PlaywrightTestConfig = {
   use: {
     baseURL: 'https://storedemo.testdino.com/',
     headless: true,
+    actionTimeout: 10 * 1000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

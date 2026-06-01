@@ -59,7 +59,7 @@ class CheckoutPage extends BasePage {
         cashOnDeliveryButton: "//button[normalize-space()='Cash on Delivery']",
         cashOnDeliveryText: "//p[normalize-space()='Cash on Delivery']",
         placeOrderButton: "//button[normalize-space()='Place Order']",
-        orderSuccessMessage: "//p[contains(text(), 'Your order was placed successf')]",
+        orderSuccessMessage: "[data-testid='order-placed-message']",
         orderItemNameConfirmation: "p[data-testid='order-item-name']",
         continueShoppingButton: 'button[data-testid="continue-shopping-button"]',
         orderConfirmedTitle: `[data-testid="order-confirmed-title"]`
