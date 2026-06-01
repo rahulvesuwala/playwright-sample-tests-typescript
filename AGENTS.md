@@ -81,7 +81,9 @@ npx playwright test -g "user can login and logout"
 │   ├── UserPage.ts            # account: personal info, addresses CRUD, security/password
 │   └── ContactUsPage.ts       # Contact Us form + success
 ├── tests/
+│   ├── fixtures.ts            # custom fixtures: injects `allPages`, owns infra/auth
 │   └── ecommerce.spec.ts      # the single spec file — all journeys live here (see §8)
+├── .agents/skills/           # vendored TestDino Playwright Skill (best-practice guides)
 ├── .github/workflows/test.yml # CI: sharded run + merge + TestDino upload
 ├── playwright.config.ts       # config (see §7)
 ├── tsconfig.json              # strict, ESM, module: nodenext
@@ -116,9 +118,13 @@ to `.env` and fill it in.
 ### Page Object Model
 - Every page/area is a class in `pages/` that **extends `BasePage`** (which stores
   the `page: Page` and offers `navigateTo`, `getPageTitle`).
-- `AllPages` is the single aggregator. Tests never `new` a page object directly —
-  they do `const allPages = new AllPages(page)` in `beforeEach`, then call
-  `allPages.loginPage.login(...)`, `allPages.cartPage.clickOnCheckoutButton()`, etc.
+- `AllPages` is the single aggregator. Tests never `new` a page object directly — they
+  receive it through the **`allPages` custom fixture** (`tests/fixtures.ts`):
+  `test('...', async ({ allPages }) => { await allPages.loginPage.login(...) })`. The
+  fixture navigates to `/` and re-attaches the auth token the demo store omits on some
+  API calls (the old `beforeEach` + shared global was replaced with this fixture, per the
+  [TestDino Playwright Skill](https://github.com/testdino-hq/playwright-skill) —
+  vendored at `.agents/skills/playwright-skill/`).
 - Each POM holds a `locators` object (string selectors) and three kinds of methods:
   - **getters** → return a `Locator` (e.g. `getCheckoutButton()`),
   - **actions** → `clickX` / `fillX` / `searchX` (perform interactions),
@@ -169,7 +175,8 @@ to `.env` and fill it in.
 ## 8. Test catalog (`tests/ecommerce.spec.ts`)
 
 Shared helpers in the spec: `login()`, `login1()` (uses `USERNAME1`), `logout()`.
-`beforeEach` builds `AllPages` and navigates to `/`.
+The `allPages` fixture (`tests/fixtures.ts`) builds `AllPages`, navigates to `/`, and
+re-attaches the auth token — tests just declare `async ({ allPages }) => { ... }`.
 
 1. Verify that user can login and logout successfully
 2. Verify that user can update personal information

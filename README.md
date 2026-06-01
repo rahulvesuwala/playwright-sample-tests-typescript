@@ -8,12 +8,13 @@
 
 <br/>
 
-[![Playwright](https://img.shields.io/badge/Playwright-1.55-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.60-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Page Object Model](https://img.shields.io/badge/Pattern-Page%20Object%20Model-F2994A)](#-architecture)
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](.github/workflows/test.yml)
 [![Reporting](https://img.shields.io/badge/Reporting-TestDino-7C3AED)](https://testdino.com/)
+[![Playwright Skill](https://img.shields.io/badge/Best%20Practices-TestDino%20Playwright%20Skill-7C3AED?logo=playwright&logoColor=white)](https://github.com/testdino-hq/playwright-skill)
 
 `Auth` &nbsp;·&nbsp; `Profile` &nbsp;·&nbsp; `Cart` &nbsp;·&nbsp; `Checkout` &nbsp;·&nbsp; `Orders` &nbsp;·&nbsp; `Wishlist` &nbsp;·&nbsp; `Reviews` &nbsp;·&nbsp; `Contact`
 
@@ -52,14 +53,15 @@ assert that its critical shopper journeys keep working.
 
 | Layer | Choice |
 | --- | --- |
-| Test runner | Playwright Test `^1.55` |
+| Test runner | Playwright Test `^1.60` |
 | Language | TypeScript `^5.9` (ESM, `module: nodenext`) |
 | Runtime | Node.js 18+ |
-| Design pattern | Page Object Model |
+| Design pattern | Page Object Model + custom fixtures |
+| Best practices | [TestDino Playwright Skill](https://github.com/testdino-hq/playwright-skill) |
 | Config | `dotenv` for credentials / test data |
 | Browser | Chromium (Desktop Chrome) |
 | CI | GitHub Actions (5-way sharded) |
-| Reporting | HTML + JSON + Blob, uploaded to TestDino |
+| Reporting | HTML + JSON + Blob, uploaded to TestDino via `tdpw` |
 
 ---
 
@@ -82,7 +84,9 @@ pages/                     Page Object Models (one class per page/area)
   ├─ UserPage.ts           Account: personal info, addresses, security
   └─ ContactUsPage.ts      Contact Us form
 tests/
+  ├─ fixtures.ts           Custom test fixtures (injects `allPages`, owns infra/auth)
   └─ ecommerce.spec.ts     All shopper journeys (20 tests)
+.agents/skills/            Vendored TestDino Playwright Skill (best-practice guides)
 .github/workflows/test.yml CI: sharded run → merge → TestDino upload
 playwright.config.ts       Playwright configuration
 .env.example               Template for required secrets
@@ -138,23 +142,58 @@ npx playwright test -g "user can login and logout"
 
 ## 🏛 Architecture
 
-Tests use the **Page Object Model**. Every page extends `BasePage`, and a single
-`AllPages` aggregator wires them together so specs read like a script:
+Tests use the **Page Object Model** combined with a **custom Playwright fixture**
+(following the [TestDino Playwright Skill](#-built-with-the-testdino-playwright-skill)).
+Every page extends `BasePage`, a single `AllPages` aggregator wires them together, and
+the `allPages` fixture (`tests/fixtures.ts`) injects it into each test — so there's no
+shared global and specs read like a script:
 
 ```ts
-const allPages = new AllPages(page);
-await allPages.loginPage.login(username, password);
-await allPages.inventoryPage.searchProduct('GoPro HERO10 Black');
-await allPages.cartPage.clickOnCheckoutButton();
-await allPages.checkoutPage.clickOnPlaceOrder();
+import { test, expect } from './fixtures';
+
+test('shopper can place an order', async ({ allPages }) => {
+  await allPages.loginPage.login(username, password);
+  await allPages.inventoryPage.searchProduct('GoPro HERO10 Black');
+  await allPages.cartPage.clickOnCheckoutButton();
+  await allPages.checkoutPage.clickOnPlaceOrder();
+});
 ```
 
-Each Page Object holds a `locators` map plus **getters** (return a `Locator`),
-**actions** (`clickX` / `fillX`), and **assertions** (`assertX` / `verifyX`).
+The fixture also owns shared test infrastructure (navigating to the app root and
+re-attaching the auth token the demo store omits on some API calls). Each Page Object
+holds a `locators` map plus **getters** (return a `Locator`), **actions**
+(`clickX` / `fillX`), and **assertions** (`assertX` / `verifyX`).
 
 > ⚠️ This is a pure-ESM project — **relative imports must use the `.js` extension**
 > (e.g. `import AllPages from '../pages/AllPages.js'`) even though the files are `.ts`.
 > Details and more conventions live in [`AGENTS.md`](./AGENTS.md).
+
+---
+
+## 🦖 Built with the TestDino Playwright Skill
+
+This repo's testing conventions follow the **[TestDino Playwright Skill](https://github.com/testdino-hq/playwright-skill)** —
+70+ AI-powered guides for Playwright best practices (POM, fixtures, locators,
+assertions, CI, debugging, and more), updated for **Playwright 1.60**.
+
+The skill is vendored into the repo under
+[`.agents/skills/playwright-skill/`](./.agents/skills/playwright-skill) so AI agents and
+contributors share the same best-practice playbook. Highlights applied here:
+
+- **Page Object Model** → [`pom/page-object-model.md`](./.agents/skills/playwright-skill/pom/page-object-model.md)
+- **POM vs fixtures vs helpers** → [`pom/pom-vs-fixtures-vs-helpers.md`](./.agents/skills/playwright-skill/pom/pom-vs-fixtures-vs-helpers.md)
+- **Custom fixtures** inject page objects (`tests/fixtures.ts`) instead of a shared global
+- **Locator & assertion** strategy and **CI/reporting** guidance from the `core/` and `ci/` packs
+
+Install or update it in any project:
+
+```sh
+npx skills add testdino-hq/playwright-skill        # all packs
+npx skills add testdino-hq/playwright-skill/pom     # just the POM pack
+```
+
+> 💛 Like it? Star [testdino-hq/playwright-skill](https://github.com/testdino-hq/playwright-skill)
+> and explore the full toolkit at [testdino.com](https://testdino.com).
 
 ---
 
@@ -170,13 +209,15 @@ npm run test:report
 ### Cloud reporting with TestDino
 
 Both the HTML and JSON reporters must stay enabled for [TestDino](https://testdino.com/)
-to ingest results. After a run produces `playwright-report/`:
+to ingest results. `tdpw` is installed as a dependency. After a run produces
+`playwright-report/`:
 
 ```sh
-npx --yes tdpw ./playwright-report --token="YOUR_TESTDINO_API_KEY" --upload-html
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_API_KEY" --upload-html
 ```
 
-(`npm run report:upload` runs `tdpw` for you — pass your own `--token`.)
+`npm run report:upload` runs `tdpw upload` for you — set the token via the
+`TESTDINO_TOKEN` environment variable (e.g. in `.env`) or pass `--token`.
 
 ---
 

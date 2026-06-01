@@ -1,44 +1,25 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
-import AllPages from '../pages/AllPages.js';
+// `test` and `expect` come from our custom fixtures (TestDino Playwright Skill):
+// each test receives a fresh `allPages` Page Object aggregator via dependency
+// injection instead of a shared global + beforeEach. See tests/fixtures.ts.
+import { test, expect } from './fixtures.js';
+import type AllPages from '../pages/AllPages.js';
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
-let allPages: any;
-
-test.beforeEach(async ({ page }) => {
-  // Workaround for a demo-store defect: the app fails to attach the auth token to some
-  // API calls (notably POST /api/createOrder), so the backend rejects them with
-  // 401 "Token Missing" and orders never get placed. Re-attach the token (already in
-  // localStorage after login) to any storedemo API request that is missing it.
-  await page.route('**/storedemo-api.testdino.com/**', async (route) => {
-    const headers = route.request().headers();
-    if (!headers['authorization']) {
-      const token = await page
-        .evaluate(() => localStorage.getItem('user_access_token'))
-        .catch(() => null);
-      if (token) headers['authorization'] = `Bearer ${token}`;
-    }
-    await route.continue({ headers });
-  });
-
-  allPages = new AllPages(page);
-  await page.goto('/');
-});
-
-async function login(username = process.env.USERNAME, password = process.env.PASSWORD) {
+async function login(allPages: AllPages, username = process.env.USERNAME, password = process.env.PASSWORD) {
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
   await allPages.loginPage.login(username, password);
 }
 
-async function login1(username = process.env.USERNAME1, password = process.env.PASSWORD) {
+async function login1(allPages: AllPages, username = process.env.USERNAME1, password = process.env.PASSWORD) {
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
   await allPages.loginPage.login(username, password);
 }
 
-async function logout() {
+async function logout(allPages: AllPages) {
   await allPages.loginPage.page.waitForTimeout(2000); // Wait for 2 seconds
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.clickOnLogoutButton();
@@ -46,7 +27,7 @@ async function logout() {
 
 // Register and sign in as a brand-new user so the test gets a clean account
 // (used by flows that mutate account state, e.g. addresses).
-async function registerAndLogin() {
+async function registerAndLogin(allPages: AllPages) {
   const email = `test+${Date.now()}@test.com`;
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
@@ -60,9 +41,9 @@ async function registerAndLogin() {
   return email;
 }
 
-test('Verify that user can login and logout successfully', async () => {
-  await login();
-  await logout();
+test('Verify that user can login and logout successfully', async ({ allPages }) => {
+  await login(allPages);
+  await logout(allPages);
 
   // ⚠️ INTENTIONAL FAILURE (1 of 2) — deliberately wrong assertion kept here to
   // demonstrate how failures surface in the report. Delete this line to make the
@@ -70,15 +51,15 @@ test('Verify that user can login and logout successfully', async () => {
   expect('logged-out').toBe('still-logged-in');
 });
 
-test('Verify that user can update personal information', async () => {
-  await login();
+test('Verify that user can update personal information', async ({ allPages }) => {
+  await login(allPages);
   await allPages.userPage.clickOnUserProfileIcon();
   await allPages.userPage.updatePersonalInfo();
   await allPages.userPage.verifyPersonalInfoUpdated();
 });
 
-test('Verify that User Can Add, Edit, and Delete Addresses after Logging In', async () => {
-    await registerAndLogin();
+test('Verify that User Can Add, Edit, and Delete Addresses after Logging In', async ({ allPages }) => {
+    await registerAndLogin(allPages);
 
   await test.step('Verify that user is able to add address successfully', async () => {
     await allPages.userPage.clickOnUserProfileIcon();
@@ -99,9 +80,9 @@ test('Verify that User Can Add, Edit, and Delete Addresses after Logging In', as
   });
 });
 
-test('Verify that user can change password successfully', async () => {
+test('Verify that user can change password successfully', async ({ allPages }) => {
   await test.step('Login with existing password', async () => {
-    await login1();
+    await login1(allPages);
   });
 
   await test.step('Change password and verify login with new password', async () => {
@@ -114,7 +95,7 @@ test('Verify that user can change password successfully', async () => {
   });
   await test.step('Verify login with new password and revert back to original password', async () => {
     // Re-login with new password
-    await logout();
+    await logout(allPages);
     await allPages.loginPage.login(process.env.USERNAME1, process.env.NEW_PASSWORD);
 
     // Revert back
@@ -125,8 +106,8 @@ test('Verify that user can change password successfully', async () => {
   })
 });
 
-test('Verify that the New User is able to add Addresses in the Address section', async () => {
-  await registerAndLogin();
+test('Verify that the New User is able to add Addresses in the Address section', async ({ allPages }) => {
+  await registerAndLogin(allPages);
   await allPages.userPage.clickOnUserProfileIcon();
   await allPages.userPage.clickOnAddressTab();
   await allPages.userPage.clickOnAddAddressButton();
@@ -134,9 +115,9 @@ test('Verify that the New User is able to add Addresses in the Address section',
   await allPages.userPage.fillAddressForm();
 });
 
-test('Verify that User Can Complete the Journey from Login to Order Placement', async () => {
+test('Verify that User Can Complete the Journey from Login to Order Placement', async ({ allPages }) => {
   const productName = 'GoPro HERO10 Black';
-  await login();
+  await login(allPages);
   await allPages.inventoryPage.clickOnShopNowButton();
   await allPages.inventoryPage.clickOnAllProductsLink();
   await allPages.inventoryPage.searchProduct(productName);
@@ -154,7 +135,7 @@ test('Verify that User Can Complete the Journey from Login to Order Placement', 
   await allPages.checkoutPage.verifyOrderPlacedSuccessfully();
 });
 
-test('Verify user can place and cancel an order', async () => {
+test('Verify user can place and cancel an order', async ({ allPages }) => {
   const productName = 'GoPro HERO10 Black';
   const productPriceAndQuantity = '$600 × 1';
   const orderStatusProcessing = 'Processing';
@@ -225,7 +206,7 @@ test('Verify user can place and cancel an order', async () => {
   })
 });
 
-test('Verify that a New User Can Successfully Complete the Journey from Registration to a Single Order Placement', async () => {
+test('Verify that a New User Can Successfully Complete the Journey from Registration to a Single Order Placement', async ({ allPages }) => {
   // fresh test data
   const email = `test+${Date.now()}@test.com`;
   const firstName = 'Test';
@@ -337,7 +318,7 @@ test('Verify that a New User Can Successfully Complete the Journey from Registra
   });
 });
 
-test('Verify that user add product to cart before logging in and then complete order after logging in', async () => {
+test('Verify that user add product to cart before logging in and then complete order after logging in', async ({ allPages }) => {
   await test.step('Navigate and add product to cart before logging in', async () => {
     await allPages.homePage.clickOnShopNowButton();
     await allPages.homePage.clickProductImage();
@@ -346,7 +327,7 @@ test('Verify that user add product to cart before logging in and then complete o
     await allPages.loginPage.clickOnUserProfileIcon();
   })
   await test.step('Login and complete order', async () => {
-    await login();
+    await login(allPages);
     await allPages.cartPage.clickOnCartIcon();
     await allPages.cartPage.clickOnCheckoutButton();
     await allPages.checkoutPage.verifyCheckoutTitle();
@@ -357,16 +338,16 @@ test('Verify that user add product to cart before logging in and then complete o
 })
 });
 
-test('Verify that user can filter products by price range', async () => {
-    await login();
+test('Verify that user can filter products by price range', async ({ allPages }) => {
+    await login(allPages);
     await allPages.homePage.clickOnShopNowButton();
     await allPages.homePage.clickOnFilterButton();
     await allPages.homePage.adjustPriceRangeSlider('500', '1500');
     await allPages.homePage.clickOnFilterButton();
 });
 
-test('Verify if user can add product to wishlist, moves it to card and then checks out', async () => {
-    await login();
+test('Verify if user can add product to wishlist, moves it to card and then checks out', async ({ allPages }) => {
+    await login(allPages);
   
     await test.step('Add product to wishlistand then add to cart', async () => {
       await allPages.homePage.clickOnShopNowButton();
@@ -389,7 +370,7 @@ test('Verify if user can add product to wishlist, moves it to card and then chec
   
 });
 
-test('Verify new user views and cancels an order in my orders', async () => {
+test('Verify new user views and cancels an order in my orders', async ({ allPages }) => {
     const email = `test+${Date.now()}@test.com`;
     const firstName = 'Test';
     const lastName = 'User';
@@ -447,7 +428,7 @@ test('Verify new user views and cancels an order in my orders', async () => {
   });
 });
 
-test('Verify That a New User Can Successfully Complete the Journey from Registration to a Multiple Order Placement', async () => {
+test('Verify That a New User Can Successfully Complete the Journey from Registration to a Multiple Order Placement', async ({ allPages }) => {
     const email = `test+${Date.now()}@test.com`;
     const firstName = 'Test';
     const lastName = 'User';
@@ -513,7 +494,7 @@ test('Verify That a New User Can Successfully Complete the Journey from Registra
   })
 });
 
-test('Verify that the new user is able to Sign Up, Log In, and Navigate to the Home Page Successfully', async () => {
+test('Verify that the new user is able to Sign Up, Log In, and Navigate to the Home Page Successfully', async ({ allPages }) => {
     const email = `test+${Date.now()}@test.com`;
     const firstName = 'Test';
     const lastName = 'User';
@@ -535,8 +516,8 @@ test('Verify that the new user is able to Sign Up, Log In, and Navigate to the H
   })
 })
 
-test('Verify that user is able to fill Contact Us page successfully', async () => {
-    await login();
+test('Verify that user is able to fill Contact Us page successfully', async ({ allPages }) => {
+    await login(allPages);
     await allPages.homePage.clickOnContactUsLink();
     await allPages.contactUsPage.assertContactUsTitle();
     await allPages.contactUsPage.fillContactUsForm();
@@ -548,9 +529,9 @@ test('Verify that user is able to fill Contact Us page successfully', async () =
     expect('form-submitted').toBe('submission-blocked');
 });
 
-test('Verify that user is able to submit a product review ', async () => {
+test('Verify that user is able to submit a product review ', async ({ allPages }) => {
   await test.step('Login as existing user and navigate to a product', async () => {
-    await login();
+    await login(allPages);
   })
 
   await test.step('Navigate to all product section and select a product', async () => {
@@ -573,9 +554,9 @@ test('Verify that user is able to submit a product review ', async () => {
   })
 });
 
-test('Verify that user can edit and delete a product review', async () => {
+test('Verify that user can edit and delete a product review', async ({ allPages }) => {
   await test.step('Login as existing user and navigate to a product', async () => {
-    await login();
+    await login(allPages);
   })
 
   await test.step('Navigate to all product section and select a product', async () => {
@@ -611,9 +592,9 @@ test('Verify that user can edit and delete a product review', async () => {
   })
 });
 
-test('Verify that user can purchase multiple quantities in a single order', async () => {
+test('Verify that user can purchase multiple quantities in a single order', async ({ allPages }) => {
     const productName = 'GoPro HERO10 Black';
-    await login();
+    await login(allPages);
     await allPages.inventoryPage.clickOnShopNowButton();
     await allPages.inventoryPage.clickOnAllProductsLink();
     await allPages.inventoryPage.searchProduct(productName);
@@ -633,8 +614,8 @@ test('Verify that user can purchase multiple quantities in a single order', asyn
     await allPages.checkoutPage.verifyOrderPlacedSuccessfully();
 });
 
-test('Verify that all the navbar are working properly', async () => {
-    await login();
+test('Verify that all the navbar are working properly', async ({ allPages }) => {
+    await login(allPages);
     await allPages.homePage.clickBackToHomeButton();
     // await allPages.homePage.assertHomePage();
     await allPages.homePage.clickAllProductsNav();
@@ -645,9 +626,9 @@ test('Verify that all the navbar are working properly', async () => {
     await allPages.homePage.assertAboutUsTitle();
 });
 
-test('Verify that user is able to delete selected product from cart', async () => {
+test('Verify that user is able to delete selected product from cart', async ({ allPages }) => {
     const productName = 'GoPro HERO10 Black';
-    await login();
+    await login(allPages);
     await allPages.inventoryPage.clickOnShopNowButton();
     await allPages.inventoryPage.clickOnAllProductsLink();
     await allPages.inventoryPage.searchProduct(productName);

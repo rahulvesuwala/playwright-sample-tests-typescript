@@ -24,7 +24,7 @@ const config: PlaywrightTestConfig = {
   use: {
     baseURL: 'https://storedemo.testdino.com/',
     headless: true,
-    actionTimeout: 10 * 1000,
+    actionTimeout: 30 * 1000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

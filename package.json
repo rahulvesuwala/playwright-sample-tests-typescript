@@ -11,18 +11,19 @@
     "test:chromium": "playwright test --project=chromium",
     "test:report": "playwright show-report",
     "merge-reports": "playwright merge-reports --config=playwright.config.ts ./all-blob-reports",
-    "report:upload": "tdpw ./playwright-report --upload-html",
+    "report:upload": "tdpw upload ./playwright-report --upload-html",
     "codegen": "playwright codegen https://storedemo.testdino.com/",
     "install:browsers": "playwright install --with-deps"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.60.0",
     "@types/node": "^24.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "dotenv": "^17.2.2",
-    "playwright": "^1.55.0"
+    "playwright": "^1.60.0",
+    "tdpw": "^1.0.37"
   }
 }
