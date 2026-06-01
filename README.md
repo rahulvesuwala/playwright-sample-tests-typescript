@@ -195,10 +195,11 @@ a weekday schedule, and on manual dispatch:
 
 ## 🤝 Contributing
 
-Pull requests and issues are welcome. When adding tests or page objects, follow the
-conventions in [`AGENTS.md`](./AGENTS.md) (POM structure, `.js` import extensions,
-`test.step` grouping, and `data-testid` selectors where available).
+Pull requests and issues are welcome. This is a public repo — you don't need write
+access; just **fork → branch → PR**. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the
+flow and [`AGENTS.md`](./AGENTS.md) for conventions (POM structure, `.js` import
+extensions, `test.step` grouping, and `data-testid` selectors where available).
 
 ## 📄 License
 
-MIT
+Released under the [MIT License](./LICENSE).
