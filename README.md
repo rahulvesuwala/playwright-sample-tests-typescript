@@ -1,246 +1,488 @@
 <div align="center">
 
-# 🛒 Ecommerce Demo Store — Playwright E2E Tests
+# 🛒 Ecommerce Demo Store, Playwright E2E Tests
 
-### Verify every shopper journey, on every run.
+### A practical Playwright test suite for a real ecommerce flow.
 
-*Sign up, search, wishlist, fill the cart, check out, then track and cancel the order — the full Ecommerce flow, exercised end to end and reported to the cloud.*
+This repo shows how to test a complete shopper journey with Playwright and TypeScript, from signup and login to cart, checkout, orders, wishlist, reviews, and contact forms.
 
-<br/>
+<br />
 
-[![Playwright](https://img.shields.io/badge/Playwright-1.60-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Page Object Model](https://img.shields.io/badge/Pattern-Page%20Object%20Model-F2994A)](#-architecture)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](.github/workflows/test.yml)
-[![Reporting](https://img.shields.io/badge/Reporting-TestDino-7C3AED)](https://testdino.com/)
-[![Playwright Skill](https://img.shields.io/badge/Best%20Practices-TestDino%20Playwright%20Skill-7C3AED?logo=playwright&logoColor=white)](https://github.com/testdino-hq/playwright-skill)
+![Playwright](https://img.shields.io/badge/Playwright-1.60-45ba4b?logo=playwright)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js)
+![Pattern](https://img.shields.io/badge/Pattern-Page%20Object%20Model-f59e0b)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff?logo=githubactions)
+![Reporting](https://img.shields.io/badge/Reporting-TestDino-7c3aed)
+![Best Practices](https://img.shields.io/badge/Best%20Practices-TestDino%20Playwright%20Skill-6d28d9)
 
-`Auth` &nbsp;·&nbsp; `Profile` &nbsp;·&nbsp; `Cart` &nbsp;·&nbsp; `Checkout` &nbsp;·&nbsp; `Orders` &nbsp;·&nbsp; `Wishlist` &nbsp;·&nbsp; `Reviews` &nbsp;·&nbsp; `Contact`
+<br />
 
-**System under test → [storedemo.testdino.com](https://storedemo.testdino.com)**
+`🔐 Auth` · `👤 Profile` · `🛒 Cart` · `💳 Checkout` · `📦 Orders` · `💜 Wishlist` · `⭐ Reviews` · `📩 Contact`
+
+<br />
+
+**Demo site:** [storedemo.testdino.com](https://storedemo.testdino.com)
 
 </div>
 
 ---
 
-## 📖 Overview
+## 📌 What this repo is
 
-This repository is an end-to-end UI test suite — built with **Playwright** and
-**TypeScript** using the **Page Object Model** — for the **TestDino Ecommerce Demo
-Store**. There is no application to build here; the tests drive a hosted demo store and
-assert that its critical shopper journeys keep working.
+This is a sample Playwright + TypeScript end-to-end test project for the TestDino Ecommerce Demo Store.
 
-**What it covers**
+It is meant to help developers understand how a real Playwright test suite can be organized. The tests use page objects, shared fixtures, environment variables, CI sharding, Playwright reports, and optional TestDino report uploads.
 
-- 🔐 **Auth** — sign up, sign in, sign out, change password
-- 👤 **Profile** — update personal info, add / edit / delete addresses
-- 🔎 **Browse** — product search, price-range filter, navbar navigation
-- 🛒 **Cart** — add / remove items, change quantities, subtotal & totals
-- 💳 **Checkout** — shipping address, Cash on Delivery, order summary, place order
-- 📦 **Orders** — view "My Orders", pagination, order details, cancel an order
-- ❤️ **Wishlist** — add to wishlist, move to cart, check out
-- ⭐ **Reviews** — write, edit, and delete product reviews
-- ✉️ **Contact** — submit the Contact Us form
+This is not an ecommerce app. There is no frontend or backend to run here. The tests run against the hosted demo store.
 
-> 🤖 **Working with an AI agent?** Read [`AGENTS.md`](./AGENTS.md) — it documents the
-> structure, conventions, commands, env vars, page-object catalog, and gotchas so the
-> agent doesn't have to discover anything.
+## 👥 Who this is for
 
----
+This repo is useful if you want to:
 
-## 🧱 Tech stack
+* Learn how to structure Playwright tests with TypeScript
+* See a clean Page Object Model setup
+* Test real ecommerce user flows end to end
+* Understand how Playwright reports work
+* Run tests locally and in GitHub Actions
+* Upload Playwright results to TestDino
+* Give AI coding tools clear project instructions through `AGENTS.md`
 
-| Layer | Choice |
-| --- | --- |
-| Test runner | Playwright Test `^1.60` |
-| Language | TypeScript `^5.9` (ESM, `module: nodenext`) |
-| Runtime | Node.js 18+ |
-| Design pattern | Page Object Model + custom fixtures |
-| Best practices | [TestDino Playwright Skill](https://github.com/testdino-hq/playwright-skill) |
-| Config | `dotenv` for credentials / test data |
-| Browser | Chromium (Desktop Chrome) |
-| CI | GitHub Actions (5-way sharded) |
-| Reporting | HTML + JSON + Blob, uploaded to TestDino via `tdpw` |
+## ✅ What the tests cover
 
----
+The test suite covers the main flows a shopper would use in an ecommerce store:
 
-## 📂 Project structure
+* Sign up for a new account
+* Sign in and sign out
+* Change password
+* Update profile information
+* Add, edit, and delete addresses
+* Search products
+* Filter products by price
+* Open product details
+* Add products to the cart
+* Remove products from the cart
+* Update cart quantity
+* Place an order
+* View order details
+* Cancel an order
+* Add products to the wishlist
+* Move wishlist items to the cart
+* Write, edit, and delete product reviews
+* Submit the Contact Us form
 
+## 🧰 Tech stack
+
+| Area               | Used in this repo                         |
+| ------------------ | ----------------------------------------- |
+| Test runner        | Playwright Test                           |
+| Language           | TypeScript                                |
+| Runtime            | Node.js 18+                               |
+| Module system      | ESM                                       |
+| Browser            | Chromium                                  |
+| Test structure     | Page Object Model + custom fixtures       |
+| Environment config | dotenv                                    |
+| CI                 | GitHub Actions                            |
+| Reports            | Playwright HTML, JSON, and Blob reports   |
+| Cloud reporting    | TestDino using `tdpw`                     |
+| AI guidance        | `AGENTS.md` and TestDino Playwright Skill |
+
+## 📁 Project structure
+
+```text
+.
+├── pages/
+│   ├── BasePage.ts
+│   ├── AllPages.ts
+│   ├── LoginPage.ts
+│   ├── SignupPage.ts
+│   ├── HomePage.ts
+│   ├── InventoryPage.ts
+│   ├── AllProductsPage.ts
+│   ├── ProductDetailsPage.ts
+│   ├── CartPage.ts
+│   ├── CheckoutPage.ts
+│   ├── OrderDetailsPage.ts
+│   ├── OrderPage.ts
+│   ├── UserPage.ts
+│   └── ContactUsPage.ts
+├── tests/
+│   ├── fixtures.ts
+│   └── ecommerce.spec.ts
+├── .agents/
+│   └── skills/
+│       └── playwright-skill/
+├── .github/
+│   └── workflows/
+│       └── test.yml
+├── .env.example
+├── AGENTS.md
+├── CONTRIBUTING.md
+├── playwright.config.ts
+├── package.json
+└── tsconfig.json
 ```
-pages/                     Page Object Models (one class per page/area)
-  ├─ BasePage.ts           Base class: holds `page`, navigateTo(), getPageTitle()
-  ├─ AllPages.ts           Aggregator that instantiates every POM
-  ├─ LoginPage.ts          Sign in / sign out
-  ├─ SignupPage.ts         Create account
-  ├─ HomePage.ts           Navbar, hero, price filter, About Us
-  ├─ InventoryPage.ts      Product grid: search, add-to-cart, wishlist
-  ├─ AllProductsPage.ts    "All Products" listing helpers
-  ├─ ProductDetailsPage.ts Product page + review CRUD
-  ├─ CartPage.ts           Cart management
-  ├─ CheckoutPage.ts       Shipping, payment, order summary, place order
-  ├─ OrderDetailsPage.ts   Order confirmation / details
-  ├─ OrderPage.ts          "My Orders" list, view & cancel
-  ├─ UserPage.ts           Account: personal info, addresses, security
-  └─ ContactUsPage.ts      Contact Us form
-tests/
-  ├─ fixtures.ts           Custom test fixtures (injects `allPages`, owns infra/auth)
-  └─ ecommerce.spec.ts     All shopper journeys (20 tests)
-.agents/skills/            Vendored TestDino Playwright Skill (best-practice guides)
-.github/workflows/test.yml CI: sharded run → merge → TestDino upload
-playwright.config.ts       Playwright configuration
-.env.example               Template for required secrets
-```
 
----
+## ⚙️ Prerequisites
+
+Before running the tests, make sure you have:
+
+* Node.js 18 or later
+* npm
 
 ## 🚀 Getting started
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) v18+ and npm
+Clone the repo:
 
-### Install
-
-```sh
-npm install                  # dependencies
-npm run install:browsers     # download Playwright browsers (one-time)
+```bash
+git clone https://github.com/testdino-hq/playwright-sample-tests-typescript.git
+cd playwright-sample-tests-typescript
 ```
 
-### Configure credentials
+Install dependencies:
 
-The suite logs into the demo store, so it needs real credentials and test data.
+```bash
+npm install
+```
 
-```sh
+Install Playwright browsers:
+
+```bash
+npm run install:browsers
+```
+
+Create a local environment file:
+
+```bash
 cp .env.example .env
-# then edit .env and fill in the values
 ```
 
-See [`.env.example`](./.env.example) for the full list (`USERNAME`, `PASSWORD`,
-`USERNAME1`, `NEW_PASSWORD`, and the `S*` shipping-address vars). `.env` is git-ignored.
+Then open `.env` and add the required test credentials and test data.
 
----
+## 🔐 Environment variables
+
+The tests use environment variables for login credentials and checkout address data.
+
+Use `.env.example` as the reference.
+
+| Variable          | What it is used for                              |
+| ----------------- | ------------------------------------------------ |
+| `USERNAME`        | Main test user email                             |
+| `PASSWORD`        | Main test user password                          |
+| `USERNAME1`       | Secondary test user email                        |
+| `NEW_PASSWORD`    | Password used in password-change tests           |
+| `S_FIRST_NAME`    | Shipping first name                              |
+| `S_LAST_NAME`     | Shipping last name                               |
+| `S_ADDRESS`       | Shipping address                                 |
+| `S_COUNTRY`       | Shipping country                                 |
+| `S_STATE`         | Shipping state                                   |
+| `S_CITY`          | Shipping city                                    |
+| `S_ZIP_CODE`      | Shipping ZIP or postal code                      |
+| `S_MOBILE_NUMBER` | Shipping phone number                            |
+| `TESTDINO_TOKEN`  | Optional token for uploading reports to TestDino |
+
+Do not commit your `.env` file. It may contain private credentials.
 
 ## 🧪 Running tests
 
-| Command | Description |
-| --- | --- |
-| `npm test` | Run the full suite (headless, chromium) |
-| `npm run test:headed` | Run with a visible browser |
-| `npm run test:ui` | Open the Playwright UI / time-travel runner |
-| `npm run test:debug` | Step through with the Playwright Inspector |
-| `npm run test:report` | Open the last HTML report |
-| `npm run codegen` | Record a new test against the demo store |
+Run all tests:
 
-Run a specific file or a test by name:
-
-```sh
-npx playwright test tests/ecommerce.spec.ts
-npx playwright test -g "user can login and logout"
+```bash
+npm test
 ```
 
----
+Run tests with the browser visible:
 
-## 🏛 Architecture
-
-Tests use the **Page Object Model** combined with a **custom Playwright fixture**
-(following the [TestDino Playwright Skill](#-built-with-the-testdino-playwright-skill)).
-Every page extends `BasePage`, a single `AllPages` aggregator wires them together, and
-the `allPages` fixture (`tests/fixtures.ts`) injects it into each test — so there's no
-shared global and specs read like a script:
-
-```ts
-import { test, expect } from './fixtures';
-
-test('shopper can place an order', async ({ allPages }) => {
-  await allPages.loginPage.login(username, password);
-  await allPages.inventoryPage.searchProduct('GoPro HERO10 Black');
-  await allPages.cartPage.clickOnCheckoutButton();
-  await allPages.checkoutPage.clickOnPlaceOrder();
-});
+```bash
+npm run test:headed
 ```
 
-The fixture also owns shared test infrastructure (navigating to the app root and
-re-attaching the auth token the demo store omits on some API calls). Each Page Object
-holds a `locators` map plus **getters** (return a `Locator`), **actions**
-(`clickX` / `fillX`), and **assertions** (`assertX` / `verifyX`).
+Open Playwright UI mode:
 
-> ⚠️ This is a pure-ESM project — **relative imports must use the `.js` extension**
-> (e.g. `import AllPages from '../pages/AllPages.js'`) even though the files are `.ts`.
-> Details and more conventions live in [`AGENTS.md`](./AGENTS.md).
-
----
-
-## 🦖 Built with the TestDino Playwright Skill
-
-This repo's testing conventions follow the **[TestDino Playwright Skill](https://github.com/testdino-hq/playwright-skill)** —
-70+ AI-powered guides for Playwright best practices (POM, fixtures, locators,
-assertions, CI, debugging, and more), updated for **Playwright 1.60**.
-
-The skill is vendored into the repo under
-[`.agents/skills/playwright-skill/`](./.agents/skills/playwright-skill) so AI agents and
-contributors share the same best-practice playbook. Highlights applied here:
-
-- **Page Object Model** → [`pom/page-object-model.md`](./.agents/skills/playwright-skill/pom/page-object-model.md)
-- **POM vs fixtures vs helpers** → [`pom/pom-vs-fixtures-vs-helpers.md`](./.agents/skills/playwright-skill/pom/pom-vs-fixtures-vs-helpers.md)
-- **Custom fixtures** inject page objects (`tests/fixtures.ts`) instead of a shared global
-- **Locator & assertion** strategy and **CI/reporting** guidance from the `core/` and `ci/` packs
-
-Install or update it in any project:
-
-```sh
-npx skills add testdino-hq/playwright-skill        # all packs
-npx skills add testdino-hq/playwright-skill/pom     # just the POM pack
+```bash
+npm run test:ui
 ```
 
-> 💛 Like it? Star [testdino-hq/playwright-skill](https://github.com/testdino-hq/playwright-skill)
-> and explore the full toolkit at [testdino.com](https://testdino.com).
+Debug tests with Playwright Inspector:
 
----
+```bash
+npm run test:debug
+```
 
-## 📊 Reporting
+Open the latest HTML report:
 
-Playwright is configured with **HTML**, **JSON**, and **Blob** reporters
-(`playwright.config.ts`). Open the HTML report locally:
-
-```sh
+```bash
 npm run test:report
 ```
 
-### Cloud reporting with TestDino
+Generate a new test with Playwright codegen:
 
-Both the HTML and JSON reporters must stay enabled for [TestDino](https://testdino.com/)
-to ingest results. `tdpw` is installed as a dependency. After a run produces
-`playwright-report/`:
-
-```sh
-npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_API_KEY" --upload-html
+```bash
+npm run codegen
 ```
 
-`npm run report:upload` runs `tdpw upload` for you — set the token via the
-`TESTDINO_TOKEN` environment variable (e.g. in `.env`) or pass `--token`.
+Run a specific spec file:
 
----
+```bash
+npx playwright test tests/ecommerce.spec.ts
+```
+
+Run tests by title:
+
+```bash
+npx playwright test -g "user can login and logout"
+```
+
+## 🏗️ How the test suite is organized
+
+The project uses the Page Object Model.
+
+Page objects are stored in the `pages/` folder. Each page object keeps the locators and actions for one page or feature area. This keeps the test files easier to read and avoids repeating selectors across tests.
+
+`AllPages.ts` creates one typed place to access all page objects. The custom fixture in `tests/fixtures.ts` makes that available inside every test as `allPages`.
+
+Example:
+
+```ts
+import { expect, test } from './fixtures.js';
+
+test('shopper can place an order', async ({ allPages }) => {
+  await allPages.loginPage.login(process.env.USERNAME!, process.env.PASSWORD!);
+  await allPages.inventoryPage.searchProduct('GoPro HERO10 Black');
+  await allPages.cartPage.clickOnCheckoutButton();
+  await allPages.checkoutPage.clickOnPlaceOrderButton();
+
+  await expect(allPages.orderDetailsPage.orderConfirmationMessage).toBeVisible();
+});
+```
+
+The test reads like a user journey, while the detailed selectors stay inside the page objects.
+
+## 📦 ESM import note
+
+This project uses native ESM with TypeScript.
+
+For local file imports, use `.js` extensions even when the source file is TypeScript.
+
+Correct:
+
+```ts
+import AllPages from '../pages/AllPages.js';
+```
+
+Incorrect:
+
+```ts
+import AllPages from '../pages/AllPages';
+```
+
+This is required because the TypeScript files are compiled to JavaScript before running.
+
+## 📊 Reports
+
+Playwright creates test reports after a run.
+
+This repo is configured to generate:
+
+* HTML report
+* JSON report
+* Blob report
+
+Open the local HTML report:
+
+```bash
+npm run test:report
+```
+
+The HTML report is useful when you want to inspect failed tests, screenshots, traces, and step details locally.
+
+## ☁️ Upload reports to TestDino
+
+Uploading to TestDino is optional.
+
+You can run the tests locally without a TestDino token. Use TestDino when you want shared reporting, test history, trend analysis, and better visibility for your team.
+
+Upload a report manually:
+
+```bash
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN" --upload-html
+```
+
+Or use the npm script:
+
+```bash
+TESTDINO_TOKEN="YOUR_TESTDINO_TOKEN" npm run report:upload
+```
+
+In CI, store `TESTDINO_TOKEN` as a GitHub Actions secret.
 
 ## 🔁 Continuous integration
 
-[`.github/workflows/test.yml`](.github/workflows/test.yml) runs the suite on every PR, on
-a weekday schedule, and on manual dispatch:
+This repo includes a GitHub Actions workflow for running the tests in CI.
 
-1. **Run** — a 5-way **shard matrix** executes chromium tests in parallel and uploads a
-   blob report per shard.
-2. **Merge** — all blob reports are merged into one HTML/JSON report
-   (`playwright merge-reports`) and uploaded as an artifact.
-3. **Report** — the merged report is pushed to TestDino.
+The workflow is designed for larger Playwright projects. It runs tests in shards, saves the Blob reports, merges them, generates the final report, and uploads the results to TestDino.
 
----
+Typical CI flow:
+
+1. Install dependencies
+2. Install Playwright browsers
+3. Run tests in shards
+4. Upload Blob reports from each shard
+5. Merge reports
+6. Generate the final Playwright report
+7. Upload results to TestDino
+
+## 🤖 AI agent support
+
+This repo includes `AGENTS.md`.
+
+That file gives AI coding tools clear instructions about the project structure, commands, conventions, imports, fixtures, page objects, and common mistakes.
+
+It is useful when working with tools like:
+
+* Claude Code
+* Cursor
+* Windsurf
+* GitHub Copilot
+
+The repo also includes the TestDino Playwright Skill here:
+
+```text
+.agents/skills/playwright-skill/
+```
+
+The skill contains Playwright best practices for locators, assertions, fixtures, Page Object Model, CI, debugging, and reporting.
+
+To install the TestDino Playwright Skill in another project:
+
+```bash
+npx skills add testdino-hq/playwright-skill
+```
+
+## 🧭 Common workflows
+
+### Run the project locally
+
+```bash
+npm install
+npm run install:browsers
+cp .env.example .env
+npm test
+```
+
+### Debug a failing test
+
+```bash
+npm run test:debug
+```
+
+Or debug one test by title:
+
+```bash
+npx playwright test -g "test title here" --debug
+```
+
+### View the latest report
+
+```bash
+npm run test:report
+```
+
+### Upload a report to TestDino
+
+```bash
+TESTDINO_TOKEN="YOUR_TESTDINO_TOKEN" npm run report:upload
+```
+
+## 🛠️ Troubleshooting
+
+### Browser is not installed
+
+Run:
+
+```bash
+npm run install:browsers
+```
+
+If you are running tests in Linux CI, install browser dependencies too:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+### Tests fail because credentials are missing
+
+Check that:
+
+* `.env` exists
+* Required values are filled in
+* The test account exists on the demo store
+* The password is correct
+* The `.env` file was not accidentally committed or ignored incorrectly
+
+### Tests pass locally but fail in CI
+
+Check that:
+
+* GitHub Actions secrets are configured
+* CI has all required environment variables
+* The demo store is reachable from GitHub Actions
+* Browser dependencies are installed in CI
+* Blob reports are being uploaded and merged correctly
+
+### TestDino upload fails
+
+Check that:
+
+* `TESTDINO_TOKEN` is set
+* The token is valid
+* The Playwright report was generated
+* The upload path points to `./playwright-report`
+* HTML and JSON reporters are enabled in `playwright.config.ts`
+
+### Import errors mention ESM or missing modules
+
+Check your relative imports.
+
+This project uses ESM, so local imports should include `.js` extensions.
+
+Correct:
+
+```ts
+import LoginPage from '../pages/LoginPage.js';
+```
+
+Incorrect:
+
+```ts
+import LoginPage from '../pages/LoginPage';
+```
 
 ## 🤝 Contributing
 
-Pull requests and issues are welcome. This is a public repo — you don't need write
-access; just **fork → branch → PR**. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the
-flow and [`AGENTS.md`](./AGENTS.md) for conventions (POM structure, `.js` import
-extensions, `test.step` grouping, and `data-testid` selectors where available).
+Issues and pull requests are welcome.
+
+Before opening a pull request, run:
+
+```bash
+npm test
+```
+
+Also review:
+
+* `CONTRIBUTING.md`
+* `AGENTS.md`
+
+Keep changes focused. Avoid mixing unrelated refactors with test changes.
+
+## 🔗 Useful links
+
+* TestDino: https://testdino.com
+* TestDino app: https://app.testdino.com
+* TestDino Playwright Skill: https://github.com/testdino-hq/playwright-skill
+* Playwright docs: https://playwright.dev/docs/intro
+* Playwright browsers: https://playwright.dev/docs/browsers
 
 ## 📄 License
 
-Released under the [MIT License](./LICENSE).
+MIT
