@@ -8,9 +8,10 @@ const config: PlaywrightTestConfig = {
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
-  ...(isCI ? { workers: 1 } : {}),
+  // SCENARIO api-legit: 1 shard x 4 workers.
+  workers: 4,
 
-  timeout: 60 * 1000,
+  timeout: 30 * 1000,
   expect: { timeout: 10 * 1000 },
   reporter: [
     ['html', {
