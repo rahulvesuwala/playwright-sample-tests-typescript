@@ -52,7 +52,11 @@ class HomePage extends BasePage {
     }
 
     async clickOnShopNowButton(): Promise<void> {
-        await this.page.locator(this.locators.navbar.showNowButton).click();
+        const shopNow = this.page.locator(this.locators.navbar.showNowButton);
+        // SPA: the button renders after hydration. Wait for it before clicking
+        // so cold CI runners don't exhaust the action timeout on a not-yet-rendered button.
+        await shopNow.waitFor({ state: 'visible' });
+        await shopNow.click();
     }
 
     getProductImage(): Locator {
