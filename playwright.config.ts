@@ -8,7 +8,8 @@ const config: PlaywrightTestConfig = {
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
-  ...(isCI ? { workers: 1 } : {}),
+  // SCENARIO ui-short-smoke: 2 workers per shard.
+  workers: 2,
 
   timeout: 60 * 1000,
   expect: { timeout: 10 * 1000 },

@@ -1,12 +1,9 @@
-# .github/workflows/playwright-daily.yml
-# Runs Playwright test shards every day at **11 : 42 AM IST** (06 : 12 UTC)
-# plus anytime you trigger it manually from the Actions tab.
-
-name: Run Playwright tests
+# SCENARIO: ui-short-smoke
+# 50 small UI interaction tests (~8-12s each). 2 shards x 2 workers, ~8-10 min.
+name: Run Playwright tests (ui-short-smoke)
 
 on:
-  # push:          # runs on every push
-  pull_request:  # runs on new PRs or PR updates
+  pull_request:
   schedule:
     - cron: '30 3 * * 1-5'
   workflow_dispatch:
@@ -19,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1,2,3,4,5]
-        shardTotal: [5]
+        shardIndex: [1, 2]
+        shardTotal: [2]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,19 +26,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Create .env file
-        run: |
-          echo "USERNAME=${{ secrets.USERNAME }}" >> .env
-          echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
-          echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
-          echo "NEW_PASSWORD=${{ secrets.NEW_PASSWORD }}" >> .env
-          echo "FIRST_NAME=${{ secrets.FIRST_NAME }}" >> .env
-          echo "STREET_NAME=${{ secrets.STREET_NAME }}" >> .env
-          echo "CITY=${{ secrets.CITY }}" >> .env
-          echo "STATE=${{ secrets.STATE }}" >> .env
-          echo "COUNTRY=${{ secrets.COUNTRY }}" >> .env
-          echo "ZIP_CODE=${{ secrets.ZIP_CODE }}" >> .env
-     
+
       - name: Cache npm dependencies
         uses: actions/cache@v3
         with:
@@ -69,7 +54,7 @@ jobs:
   merge-reports:
     name: Merge Reports
     needs: run-tests
-    if: always()             # run even if some shards fail
+    if: always()
     runs-on: ubuntu-latest
 
     steps:
@@ -111,8 +96,10 @@ jobs:
           retention-days: 14
 
       - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
         run: |
           npx --yes tdpw ./playwright-report \
-            --token="trx_production_db4cc8ccb0cdcc980fc3f7e0a6f220b88dcaf22d76444222009b8ea742864752" \
+            --token="$TDPW_TOKEN" \
             --upload-html \
             --verbose
