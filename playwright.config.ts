@@ -8,9 +8,12 @@ const config: PlaywrightTestConfig = {
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
-  ...(isCI ? { workers: 1 } : {}),
+  // SCENARIO api-mock-5k-1x40: 1 shard x 40 workers.
+  // Tests are CPU-only and instant, so oversubscribing the runner is fine —
+  // the goal is 5000 results, not real 40-way parallelism.
+  workers: 40,
 
-  timeout: 60 * 1000,
+  timeout: 30 * 1000,
   expect: { timeout: 10 * 1000 },
   reporter: [
     ['html', {
