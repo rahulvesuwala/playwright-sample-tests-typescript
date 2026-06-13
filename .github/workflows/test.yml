@@ -99,7 +99,7 @@ jobs:
         env:
           TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
         run: |
-          npx --yes tdpw ./playwright-report \
+          npx tdpw ./playwright-report \
             --token="$TDPW_TOKEN" \
             --upload-html \
             --verbose
