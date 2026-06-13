@@ -111,8 +111,10 @@ jobs:
           retention-days: 14
 
       - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
         run: |
           npx --yes tdpw ./playwright-report \
-            --token="trx_production_db4cc8ccb0cdcc980fc3f7e0a6f220b88dcaf22d76444222009b8ea742864752" \
+            --token="$TDPW_TOKEN" \
             --upload-html \
             --verbose
