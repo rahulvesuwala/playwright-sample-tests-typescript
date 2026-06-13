@@ -1,6 +1,6 @@
-# SCENARIO: api-mock-5k-1x40
-# 5000 self-contained mocked API tests. 1 shard x 40 workers (set in config).
-name: Run Playwright tests (api-mock-5k-1x40)
+# SCENARIO: api-mock-5k-4x10
+# 5000 self-contained mocked API tests. 4 shards x 10 workers (set in config).
+name: Run Playwright tests (api-mock-5k-4x10)
 
 on:
   pull_request:
@@ -10,8 +10,14 @@ on:
 
 jobs:
   run-tests:
-    name: Run mocked API tests (1 shard, 40 workers)
+    name: Run mocked API shards (4 shards, 10 workers)
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
 
     env:
       MOCK_TEST_COUNT: '5000'
@@ -37,15 +43,15 @@ jobs:
           npm ci
           npx playwright install --with-deps
 
-      # 1 shard, 40 workers (workers come from playwright.config.ts).
-      - name: Run mocked API tests
-        run: npx playwright test --project=chromium --reporter=blob
+      # 4 shards, 10 workers each (workers come from playwright.config.ts).
+      - name: Run shard ${{ matrix.shardIndex }}
+        run: npx playwright test --project=chromium --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report
+          name: blob-report-${{ matrix.shardIndex }}
           path: ./blob-report
           retention-days: 1
 
@@ -80,7 +86,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./all-blob-reports
-          pattern: blob-report*
+          pattern: blob-report-*
           merge-multiple: true
 
       - name: Merge HTML & JSON reports
