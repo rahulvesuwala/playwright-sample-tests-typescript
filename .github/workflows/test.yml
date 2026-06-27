@@ -77,6 +77,7 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps
+          npm install ./testdino-playwright-1.1.0.tgz
 
       - name: Download all blob reports
         uses: actions/download-artifact@v4
