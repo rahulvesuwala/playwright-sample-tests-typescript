@@ -31,7 +31,7 @@ const config: PlaywrightTestConfig = {
       '@testdino/playwright',
       {
         serverUrl: 'https://stg-analytics.testdino.com',
-        token: process.env.TDPW_TOKEN,
+        token: process.env.TESTDINO_TOKEN,
         ciRunId,
         debug: false,
         artifacts: false,
