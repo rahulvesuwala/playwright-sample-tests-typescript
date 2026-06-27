@@ -57,6 +57,7 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps
+          npm install ./testdino-playwright-1.1.0.tgz
 
       - name: Run shard ${{ matrix.shardIndex }}
         # Runs each unique test once by default (repeat_each=1). The input remains
