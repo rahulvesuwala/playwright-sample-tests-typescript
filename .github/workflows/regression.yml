@@ -50,7 +50,8 @@ jobs:
         run: |
           npm ci
           npm remove tdpw || true
-          npm install ./testdino-playwright-2.0.0.tgz
+          
+          npm i @testdino/playwright
           npx playwright install --with-deps
 
       - name: Run Playwright Tests
