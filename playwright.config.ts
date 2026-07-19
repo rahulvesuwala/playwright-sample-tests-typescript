@@ -1,25 +1,42 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const isCI = !!process.env.CI;
 
-// SCENARIO: ui-slow-realistic
-// Real UI tests, deliberately padded to 2-5 min each so a 2-shard x 2-worker
-// run lands around ~30 min total. Padding is applied in tests/fixtures.ts via
-// the SLOW_PAD_MS env var so the test bodies stay untouched.
+// Use GitHub Actions Run ID in CI
+// Local runs will create a date-based run ID
+const ciRunId = isCI
+  ? `ci-run-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || 1}`
+  : `local-run-${new Date().toISOString().split('T')[0]}`;
+
 const config: PlaywrightTestConfig = {
   testDir: './tests',
+
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
-  // 2 workers per shard (per scenario spec).
-  workers: 2,
+  workers: isCI ? 1 : undefined,
 
-  // Per-test timeout raised to 6 min to accommodate the 2-5 min padded tests.
-  timeout: 6 * 60 * 1000,
-  expect: { timeout: 10 * 1000 },
+  timeout: 60 * 1000,
+
+  expect: {
+    timeout: 10 * 1000,
+  },
+
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    [
+      '@testdino/playwright',
+      {
+        serverUrl: 'https://stg-analytics.testdino.com',
+        token: process.env.TESTDINO_TOKEN,
+        ciRunId,
+        debug: false,
+        artifacts: false,
+      },
+    ],
     ['blob', { outputDir: 'blob-report' }],
     ['json', { outputFile: './playwright-report/report.json' }],
   ],
@@ -36,7 +53,9 @@ const config: PlaywrightTestConfig = {
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+      },
     },
   ],
 };
