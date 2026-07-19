@@ -32,7 +32,11 @@ class InventoryPage extends BasePage {
     }
 
     async clickOnShopNowButton() {
-        await this.page.click(this.locators.shopNowBtn);
+        const shopNow = this.page.locator(this.locators.shopNowBtn);
+        // SPA: the button renders after hydration. Wait for it before clicking
+        // so cold CI runners don't exhaust the action timeout on a not-yet-rendered button.
+        await shopNow.waitFor({ state: 'visible' });
+        await shopNow.click();
         await expect(this.page.locator(this.locators.allProductsTitle)).toBeVisible();
     }
     async searchProduct(productName:string) {
