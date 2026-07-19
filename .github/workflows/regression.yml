@@ -10,14 +10,15 @@ jobs:
     name: Run shard ${{ matrix.shard }}/10
     timeout-minutes: 15
     runs-on: ubuntu-latest
+
     container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
       options: --user root
 
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shard: [1,2,3,4,5,6,7,8,9,10]
 
     env:
       TDPW_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
@@ -25,17 +26,15 @@ jobs:
       TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js 22.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: 22
 
-      - name: Create .env file
+      - name: Create .env
         run: |
           echo "USERNAME=${{ secrets.USERNAME }}" >> .env
           echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
@@ -47,27 +46,14 @@ jobs:
           echo "COUNTRY=${{ secrets.COUNTRY }}" >> .env
           echo "ZIP_CODE=${{ secrets.ZIP_CODE }}" >> .env
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: |
-          npm install
+          npm ci
           npm remove tdpw || true
           npm install ./testdino-playwright-2.0.0.tgz
+          npx playwright install --with-deps
 
-      - name: Debug TestDino Environment
-        run: |
-          echo "Server URL: $TESTDINO_SERVER_URL"
-          echo "CI Run ID: $TESTDINO_CI_RUN_ID"
-          echo "Token Length: ${#TDPW_TOKEN}"
-
-      - name: Run Playwright tests
+      - name: Run Playwright Tests
         run: |
           npx tdpw test \
             -t "$TDPW_TOKEN" \
@@ -77,49 +63,41 @@ jobs:
             --workers=5
 
       - name: Upload blob report
-        if: ${{ !cancelled() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: blob-report-${{ matrix.shard }}
-          path: ./blob-report
-          retention-days: 1
+          path: blob-report
 
   merge-reports:
-    name: Merge Reports
     needs: run-tests
     if: always()
     runs-on: ubuntu-latest
 
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: 22
 
-      - name: Install dependencies
-        run: |
+      - run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Download all blob reports
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: ./all-blob-reports
+          path: all-blob-reports
           pattern: blob-report-*
           merge-multiple: true
 
-      - name: Merge Playwright HTML report
-        run: |
+      - run: |
           npx playwright merge-reports ./all-blob-reports
 
-      - name: Upload combined Playwright report
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: Playwright Test Report
-          path: ./playwright-report
-          retention-days: 14
+          name: Playwright-Test-Report
+          path: playwright-report
