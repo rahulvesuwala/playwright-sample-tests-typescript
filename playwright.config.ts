@@ -42,12 +42,13 @@ const config: PlaywrightTestConfig = {
   ],
 
   use: {
-    baseURL: 'https://storedemo.testdino.com/',
+    baseURL: 'https://storedemo.testdino.com/products',
     headless: true,
-    actionTimeout: 30 * 1000,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    actionTimeout: 15 * 1000,
+    navigationTimeout: 30 * 1000,
   },
 
   projects: [
@@ -58,6 +59,3 @@ const config: PlaywrightTestConfig = {
       },
     },
   ],
-};
-
-export default config;
