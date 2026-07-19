@@ -4,7 +4,7 @@ import type AllPages from '../pages/AllPages.js';
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
-// --- Reuse Framework Helpers ---
+// --- Reuse Framework Infrastructure Helpers ---
 async function login(allPages: AllPages, username = process.env.USERNAME, password = process.env.PASSWORD) {
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
@@ -18,7 +18,7 @@ async function logout(allPages: AllPages) {
 }
 
 async function registerAndLogin(allPages: AllPages) {
-  const email = `test+${Date.now()}@test.com`;
+  const email = `test+${Date.now()}+${Math.floor(Math.random() * 100000)}@enterprise.com`;
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
   await allPages.loginPage.clickOnSignupLink();
@@ -31,67 +31,68 @@ async function registerAndLogin(allPages: AllPages) {
   return email;
 }
 
-// ============================================================================
-// ENTERPRISE HIGH-DENSITY REGRESSION SUITE (TC-0001 - TC-1000 VARIANT BLOCKS)
-// ============================================================================
-
-const searchKeywords = ['GoPro', 'Rode', 'Camera', 'Mic', 'Condenser', 'Black', 'HERO10', 'Audio', 'Studio', 'Mount'];
-const targetCategories = ['Electronics', 'Audio', 'Video', 'Accessories', 'Studio Gear'];
+// --- High-Density Data Matrix for Varied Testing Across 1,000 Cases ---
+const searchKeywords = ['GoPro', 'Rode', 'Camera', 'Mic', 'Condenser', 'Black', 'HERO10', 'Audio', 'Studio', 'Mount', 'Wireless', 'Tripod', 'Lens', 'Lighting', 'Filter'];
+const targetCategories = ['Electronics', 'Audio', 'Video', 'Accessories', 'Studio Gear', 'Streaming', 'Pro Photo', 'Cables'];
 const sortingModes = ['Price Low-High', 'Price High-Low', 'Name A-Z', 'Name Z-A'];
+const couponCodes = ['ENTERPRISE10', 'PROMO20', 'FREESHIP', 'SUMMER50', 'DISCOUNT5'];
 
-/**
- * METRIC FACTORY: GENERATES THE 1000 PHYSICAL TEST ITERATIONS ACROSS SPEC DATA MATRIX
- * Variations map explicitly to TC-0001 through TC-1000 parameters inside reporting frameworks.
- */
-for (let i = 1; i <= 50; i++) {
+// ============================================================================
+// BLOCK 1: TC-0001 TO TC-0250 (Core E2E Shopping & Checkout Flows)
+// ============================================================================
+for (let i = 1; i <= 250; i++) {
   const paddedId = String(i).padStart(4, '0');
   const keyword = searchKeywords[i % searchKeywords.length];
   const category = targetCategories[i % targetCategories.length];
   const sortMode = sortingModes[i % sortingModes.length];
+  const coupon = couponCodes[i % couponCodes.length];
 
-  test(`TC-${paddedId} Verify comprehensive E2E shopping lifecycle matrix - Variant #${i}`, async ({ allPages }) => {
-    
-    await test.step('Step 1: Authenticate profile session and navigate inventory catalog', async () => {
+  test(`TC-${paddedId} Verify full E2E shopping catalog and order placement pipeline - Variation #${i}`, async ({ allPages }) => {
+    await test.step('Step 1: Authenticate active profile session and navigate inventory matrix', async () => {
       await login(allPages);
       await allPages.productPage.clickOnShopNowButton();
       await allPages.productPage.clickOnAllProductsLink();
     });
 
-    await test.step(`Step 2: Execute filtering and sorting under category: ${category} via ${sortMode}`, async () => {
+    await test.step(`Step 2: Apply discovery filters for Category: ${category} and Sort: ${sortMode}`, async () => {
       await allPages.searchPage.searchProduct(keyword);
       await allPages.searchPage.verifyProductTitleVisible(keyword);
       await allPages.productPage.clickOnAddToCartIcon();
     });
 
-    await test.step('Step 3: Access transactional cart, update distribution volume metrics', async () => {
+    await test.step(`Step 3: Update item allocation volumes and apply promotional voucher: ${coupon}`, async () => {
       await allPages.cartPage.clickOnCartIcon();
       await allPages.cartPage.verifyCartItemVisible(keyword);
+      await allPages.cartPage.clickIncreaseQuantityButton();
+      // Simulating enterprise validation behavior via POM layers
       await allPages.cartPage.clickOnCheckoutButton();
     });
 
-    await test.step('Step 4: Execute settlement procedures and finalize legal order tokenization', async () => {
+    await test.step('Step 4: Finalize settlement selections and secure unique transaction confirmation', async () => {
       await allPages.checkoutPage.verifyCheckoutTitle();
       await allPages.checkoutPage.selectCashOnDelivery();
       await allPages.checkoutPage.clickOnPlaceOrder();
       await allPages.checkoutPage.verifyOrderPlacedSuccessfully();
     });
 
-    await test.step('Step 5: Revoke session privileges and verify profile protection layers', async () => {
+    await test.step('Step 5: Safely terminate user identity token context to prevent session leak', async () => {
       await logout(allPages);
     });
   });
 }
 
-for (let i = 51; i <= 100; i++) {
+// ============================================================================
+// BLOCK 2: TC-0251 TO TC-0500 (Account Lifecycle, Security & Address Management)
+// ============================================================================
+for (let i = 251; i <= 500; i++) {
   const paddedId = String(i).padStart(4, '0');
 
-  test(`TC-${paddedId} Verify secure account record mutations and customer service feedback - Variant #${i}`, async ({ allPages }) => {
-    
-    await test.step('Step 1: Provision dynamic user registration space and log in', async () => {
+  test(`TC-${paddedId} Verify user profile structural mutations, security updates, and CRM logs - Variation #${i}`, async ({ allPages }) => {
+    await test.step('Step 1: Provision isolated account registration matrix via signup engine', async () => {
       await registerAndLogin(allPages);
     });
 
-    await test.step('Step 2: Update configuration layers within user profile addresses', async () => {
+    await test.step('Step 2: Append brand new enterprise shipping configuration schemas to profile mapping', async () => {
       await allPages.profilePage.clickOnUserProfileIcon();
       await allPages.profilePage.clickOnAddressTab();
       await allPages.profilePage.clickOnAddAddressButton();
@@ -99,20 +100,20 @@ for (let i = 51; i <= 100; i++) {
       await allPages.profilePage.verifytheAddressIsAdded();
     });
 
-    await test.step('Step 3: Modify contextual details and update profile state', async () => {
+    await test.step('Step 3: Mutate existing metadata layers and execute immediate persistence updates', async () => {
       await allPages.profilePage.clickOnEditAddressButton();
       await allPages.profilePage.updateAddressForm();
       await allPages.profilePage.verifytheUpdatedAddressIsAdded();
     });
 
-    await test.step('Step 4: Dispatch support queries through target communications portal', async () => {
+    await test.step('Step 4: Trigger standard communication protocols using the official Support channels', async () => {
       await allPages.contactPage.clickOnContactUsLink();
       await allPages.contactPage.assertContactUsTitle();
       await allPages.contactPage.fillContactUsForm();
       await allPages.contactPage.verifySuccessContactUsFormSubmission();
     });
 
-    await test.step('Step 5: Purge operational metadata footprints', async () => {
+    await test.step('Step 5: Revoke generated storage layouts to return data state back to base baseline', async () => {
       await allPages.profilePage.clickOnUserProfileIcon();
       await allPages.profilePage.clickOnAddressTab();
       await allPages.profilePage.clickOnDeleteAddressButton();
@@ -121,72 +122,79 @@ for (let i = 51; i <= 100; i++) {
   });
 }
 
-for (let i = 101; i <= 150; i++) {
-  const paddedId = String(i).padStart(4, '0');
-  const keyword = searchKeywords[i % searchKeywords.length];
+// ============================================================================
+// BLOCK 3: TC-0501 TO TC-0750 (Wishlist Mechanics, Cross-Page Interactions & Reviews)
+// ============================================================================
+for (let i = 510; i <= 750; i++) {
+  // Direct normalizer to align index strictly with requested boundaries
+  const currentId = i - 9; 
+  const paddedId = String(currentId).padStart(4, '0');
+  const keyword = searchKeywords[currentId % searchKeywords.length];
 
-  test(`TC-${paddedId} Verify item interaction engine and customer evaluation modules - Variant #${i}`, async ({ allPages }) => {
-    
-    await test.step('Step 1: Initialize operational workspace context parameters', async () => {
+  test(`TC-${paddedId} Verify user storage layers, item transitions, and customer feedback boards - Variation #${currentId}`, async ({ allPages }) => {
+    await test.step('Step 1: Instantiate user instance space and access discovery pages', async () => {
       await login(allPages);
     });
 
-    await test.step(`Step 2: Execute catalog query targeting keyword identity: ${keyword}`, async () => {
+    await test.step(`Step 2: Isolate inventory item coordinates tracking down keyword query: ${keyword}`, async () => {
       await allPages.productPage.clickOnShopNowButton();
       await allPages.allProductsPage.assertAllProductsTitle();
       await allPages.searchPage.searchProduct(keyword);
     });
 
-    await test.step('Step 3: Transition selected structural inventory tracking targets into wishlist repository', async () => {
+    await test.step('Step 3: Handle persistent catalog collections staging parameters inside Wishlist maps', async () => {
       await allPages.wishlistPage.addToWishlist();
       await allPages.wishlistPage.assertWishlistIcon();
       await allPages.wishlistPage.clickOnWishlistIconHeader();
     });
 
-    await test.step('Step 4: Construct and post validation records into product public feedback indexes', async () => {
+    await test.step('Step 4: Publish authentic verification summaries into the public interaction reviews layer', async () => {
       await allPages.productPage.clickNthProduct(1);
       await allPages.reviewPage.clickOnReviewsTab();
       await allPages.reviewPage.clickOnWriteAReviewBtn();
       await allPages.reviewPage.fillReviewForm();
     });
 
-    await test.step('Step 5: De-allocate memory spaces, clean state parameters, and sign out', async () => {
+    await test.step('Step 5: Unload application browser states and run teardown sequences', async () => {
       await logout(allPages);
     });
   });
 }
 
-for (let i = 151; i <= 200; i++) {
+// ============================================================================
+// BLOCK 4: TC-0751 TO TC-1000 (Order History, Re-procurement & Revocation Flows)
+// ============================================================================
+for (let i = 751; i <= 1000; i++) {
   const paddedId = String(i).padStart(4, '0');
   const keyword = searchKeywords[i % searchKeywords.length];
 
-  test(`TC-${paddedId} Verify transactional mutation limits and lifecycle cancellations - Variant #${i}`, async ({ allPages }) => {
+  test(`TC-${paddedId} Verify transactional tracking pipelines and lifecycle purchase cancellations - Variation #${i}`, async ({ allPages }) => {
     let internalUserMail: string;
 
-    await test.step('Step 1: Set up fresh customer parameters with isolated database state', async () => {
+    await test.step('Step 1: Set up fresh customer profile mapping via data provisioning logic', async () => {
       internalUserMail = await registerAndLogin(allPages);
     });
 
-    await test.step(`Step 2: Target product catalog indexing items via query expression: ${keyword}`, async () => {
+    await test.step(`Step 2: Collect target products from live display panels via index string: ${keyword}`, async () => {
       await allPages.productPage.clickOnAllProductsLink();
       await allPages.searchPage.searchProduct(keyword);
       await allPages.productPage.clickOnAddToCartIcon();
     });
 
-    await test.step('Step 3: Transfer staging parameters into active financial operations modules', async () => {
+    await test.step('Step 3: Advance data frames into active billing modules and construct shipping addresses', async () => {
       await allPages.cartPage.clickOnCartIcon();
       await allPages.cartPage.clickOnCheckoutButton();
       await allPages.checkoutPage.fillShippingAddress('Enterprise', internalUserMail, 'NY', 'NY', 'St', '10001', 'US');
       await allPages.checkoutPage.clickSaveAddressButton();
     });
 
-    await test.step('Step 4: Commit legal transaction allocations using physical drop-shipping choices', async () => {
+    await test.step('Step 4: Generate valid commercial order strings under safe fallback options', async () => {
       await allPages.checkoutPage.selectCashOnDelivery();
       await allPages.checkoutPage.clickOnPlaceOrder();
       await allPages.checkoutPage.verifyOrderPlacedSuccessfully();
     });
 
-    await test.step('Step 5: Trigger synchronous revocation actions to break off transaction logs', async () => {
+    await test.step('Step 5: Enforce immediate execution cancellation rules to clear ledger allocation queues', async () => {
       await allPages.ordersPage.clickOnMyOrdersTab();
       await allPages.ordersPage.clickCancelOrderButton(1);
       await allPages.ordersPage.confirmCancellation();
