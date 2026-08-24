@@ -31,7 +31,7 @@ jobs:
         shardTotal: [5]
 
     env:
-      TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_TOKEN: ${{ secrets.TESTDINO_API_TOKEN || secrets.TESTDINO_TOKEN }}
       TESTDINO_SERVER_URL: ${{ github.event.inputs.environment == 'production' && 'https://reporter.testdino.com' || 'https://stg-reporter.testdino.com' }}
       TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
@@ -62,7 +62,6 @@ jobs:
             --project=chromium \
             --workers=4 \
             --retries=1 \
-            --reporter=blob \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         continue-on-error: true
 
