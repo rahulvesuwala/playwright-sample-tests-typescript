@@ -1,0 +1,110 @@
+# SCENARIO: ui-short-smoke
+# 50 small, fast UI interaction tests (~8-12s each).
+# 2 shards x 2 workers. ~8-10 min total wall-clock.
+# Triggers on push, pull_request, and manual dispatch.
+name: Scenario — UI Short Smoke
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Run shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run shard ${{ matrix.shardIndex }} (smoke tests)
+        run: |
+          npx playwright test tests/smoke.spec.ts \
+            --project=chromium \
+            --reporter=blob \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: ./blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --config=playwright.config.ts ./all-blob-reports
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-UI-Smoke
+          path: ./playwright-report
+          retention-days: 14
+
+      - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
+        run: |
+          npx tdpw ./playwright-report \
+            --token="$TDPW_TOKEN" \
+            --upload-html \
+            --verbose

@@ -1,0 +1,110 @@
+# SCENARIO: api-legit
+# Real API tests against the demo store backend (no mocking).
+# POST /login, POST /register — genuine HTTP calls, fast (1-5s each).
+# 1 shard x 4 workers. Triggers on push, pull_request, and manual dispatch.
+name: Scenario — API Legit (Real HTTP)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Run API tests (real HTTP)
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --user root
+
+    env:
+      TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_SERVER_URL: https://stg-analytics.testdino.com
+      TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Create .env file
+        run: |
+          echo "USERNAME=${{ secrets.USERNAME }}" >> .env
+          echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
+          echo "NEW_PASSWORD=${{ secrets.NEW_PASSWORD }}" >> .env
+          echo "FIRST_NAME=${{ secrets.FIRST_NAME }}" >> .env
+          echo "STREET_NAME=${{ secrets.STREET_NAME }}" >> .env
+          echo "CITY=${{ secrets.CITY }}" >> .env
+          echo "STATE=${{ secrets.STATE }}" >> .env
+          echo "COUNTRY=${{ secrets.COUNTRY }}" >> .env
+          echo "ZIP_CODE=${{ secrets.ZIP_CODE }}" >> .env
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run API tests (legit)
+        run: |
+          npx playwright test tests/api.spec.ts \
+            --project=chromium \
+            --workers=4 \
+            --reporter=blob
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-api-legit
+          path: ./blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install deps
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge Playwright report
+        run: npx playwright merge-reports ./all-blob-reports
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-API-Legit
+          path: ./playwright-report
+          retention-days: 14

@@ -1,0 +1,117 @@
+# SCENARIO: regression
+# Full UI regression suite — ecommerce, cart, catalog, extra specs.
+# 10 shards x 5 workers. Triggers on push, pull_request, and manual dispatch.
+name: Scenario — Regression (UI Full Suite)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Run shard ${{ matrix.shard }}/10
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+      options: --user root
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    env:
+      TDPW_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_SERVER_URL: https://reporter.testdino.com
+      TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Create .env
+        run: |
+          echo "USERNAME=${{ secrets.USERNAME }}" >> .env
+          echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
+          echo "NEW_PASSWORD=${{ secrets.NEW_PASSWORD }}" >> .env
+          echo "FIRST_NAME=${{ secrets.FIRST_NAME }}" >> .env
+          echo "STREET_NAME=${{ secrets.STREET_NAME }}" >> .env
+          echo "CITY=${{ secrets.CITY }}" >> .env
+          echo "STATE=${{ secrets.STATE }}" >> .env
+          echo "COUNTRY=${{ secrets.COUNTRY }}" >> .env
+          echo "ZIP_CODE=${{ secrets.ZIP_CODE }}" >> .env
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm i @testdino/playwright
+          npx playwright install --with-deps
+
+      - name: Run Playwright Tests (Regression)
+        run: |
+          npx tdpw test \
+            -t "$TDPW_TOKEN" \
+            --server-url "$TESTDINO_SERVER_URL" \
+            --ci-run-id "$TESTDINO_CI_RUN_ID" \
+            --shard=${{ matrix.shard }}/10 \
+            --workers=5 \
+            -- tests/ecommerce.spec.ts tests/regression-cart.spec.ts tests/regression-catalog.data.spec.ts tests/regression-extra.spec.ts tests/large-regression-suite.spec.ts
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports ./all-blob-reports
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-Regression
+          path: playwright-report
+          retention-days: 14

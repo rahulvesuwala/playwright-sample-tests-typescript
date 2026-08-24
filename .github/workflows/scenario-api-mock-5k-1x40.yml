@@ -1,0 +1,112 @@
+# SCENARIO: api-mock-5k-1x40
+# 5000 self-contained mocked API tests — no real network, no browser navigation.
+# Layout: 1 shard x 40 workers (single runner, maximum parallelism).
+# Triggers on push, pull_request, and manual dispatch.
+name: Scenario — API Mock 5K (1 shard x 40 workers)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mock_test_count:
+        description: 'Number of mock tests to generate (default: 5000)'
+        required: false
+        default: '5000'
+
+jobs:
+  run-tests:
+    name: Run mocked API tests (1 shard, 40 workers)
+    runs-on: ubuntu-latest
+
+    env:
+      MOCK_TEST_COUNT: ${{ github.event.inputs.mock_test_count || '5000' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run mocked API tests (1x40)
+        run: |
+          npx playwright test tests/api-mock.spec.ts \
+            --project=chromium \
+            --workers=40 \
+            --reporter=blob
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-api-mock-1x40
+          path: ./blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --config=playwright.config.ts ./all-blob-reports
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-API-Mock-1x40
+          path: ./playwright-report
+          retention-days: 14
+
+      - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
+        run: |
+          npx tdpw ./playwright-report \
+            --token="$TDPW_TOKEN" \
+            --upload-html \
+            --verbose

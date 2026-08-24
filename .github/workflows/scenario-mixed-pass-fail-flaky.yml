@@ -1,0 +1,122 @@
+# SCENARIO: mixed-pass-fail-flaky
+# ~200 tests with deliberate pass/fail/flaky/skip distribution:
+#   ~70% pass, ~15% fail, ~10% flaky, ~5% skip
+# retries=1 so flaky tests surface properly.
+# Full artifacts (trace/screenshot/video) enabled.
+# 2 shards x 4 workers. Triggers on push, pull_request, and manual dispatch.
+name: Scenario — Mixed (Pass / Fail / Flaky / Skip)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mixed_test_count:
+        description: 'How many mixed tests to generate (default: 200)'
+        required: false
+        default: '200'
+
+jobs:
+  run-tests:
+    name: Run shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+
+    env:
+      MIXED_TEST_COUNT: ${{ github.event.inputs.mixed_test_count || '200' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      # Some tests fail by design — continue-on-error so the report upload always runs.
+      - name: Run shard ${{ matrix.shardIndex }} (mixed tests)
+        run: |
+          npx playwright test tests/mixed.spec.ts \
+            --project=chromium \
+            --reporter=blob \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        continue-on-error: true
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: ./blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --config=playwright.config.ts ./all-blob-reports
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-Mixed
+          path: ./playwright-report
+          retention-days: 14
+
+      - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
+        run: |
+          npx tdpw ./playwright-report \
+            --token="$TDPW_TOKEN" \
+            --upload-html \
+            --verbose
