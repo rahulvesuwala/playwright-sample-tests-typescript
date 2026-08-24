@@ -31,12 +31,14 @@ jobs:
         shardTotal: [5]
 
     env:
-      TESTDINO_TOKEN: ${{ secrets.TESTDINO_API_TOKEN || secrets.TESTDINO_TOKEN }}
+      TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
       TESTDINO_SERVER_URL: ${{ github.event.inputs.environment == 'production' && 'https://reporter.testdino.com' || 'https://stg-reporter.testdino.com' }}
       TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -54,63 +56,12 @@ jobs:
 
       # --retries=1: needed for flaky combos. continue-on-error: intentional failures.
       - name: Run shard ${{ matrix.shardIndex }} — all-permutations tests
+        env:
+          TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
         run: |
-          npx tdpw test \
-            --ci-run-id "$TESTDINO_CI_RUN_ID" \
-            --server-url "$TESTDINO_SERVER_URL" \
-            -- tests/all-permutations.spec.ts \
+          npx playwright test tests/all-permutations.spec.ts \
             --project=chromium \
             --workers=4 \
             --retries=1 \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         continue-on-error: true
-
-      - name: Upload blob report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: blob-report-${{ matrix.shardIndex }}
-          path: ./blob-report
-          if-no-files-found: ignore
-          retention-days: 1
-
-  merge-reports:
-    name: Merge Reports
-    needs: run-tests
-    if: always()
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download all blob reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ./all-blob-reports
-          pattern: blob-report-*
-          merge-multiple: true
-
-      - name: Merge reports
-        run: |
-          if [ -d "./all-blob-reports" ] && [ "$(ls -A ./all-blob-reports 2>/dev/null)" ]; then
-            npx playwright merge-reports --reporter html ./all-blob-reports
-          else
-            echo "⚠️ No blob reports found — skipping HTML merge (TestDino received results live)"
-            mkdir -p playwright-report
-          fi
-
-      - name: Upload final HTML report
-        uses: actions/upload-artifact@v4
-        with:
-          name: Playwright-Report-All-Permutations
-          path: ./playwright-report
-          retention-days: 14

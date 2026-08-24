@@ -14,9 +14,11 @@ const serverUrl =
 
 // Use GitHub Actions Run ID in CI
 // Local runs will create a date-based run ID
-const ciRunId = isCI
-  ? `ci-run-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || 1}`
-  : `local-run-${new Date().toISOString().split('T')[0]}`;
+const ciRunId =
+  process.env.TESTDINO_CI_RUN_ID ||
+  (isCI
+    ? `ci-run-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || 1}`
+    : `local-run-${new Date().toISOString().split('T')[0]}`);
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
@@ -65,3 +67,6 @@ const config: PlaywrightTestConfig = {
       },
     },
   ],
+};
+
+export default config;
