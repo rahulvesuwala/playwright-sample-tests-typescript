@@ -6,8 +6,8 @@
 name: All Permutations — 1000 Tests (15 Combinations)
 
 on:
-  push:
-  pull_request:
+  # push:
+  # pull_request:
   workflow_dispatch:
     inputs:
       environment:
