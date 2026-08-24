@@ -19,6 +19,10 @@ jobs:
         shardIndex: [1, 2, 3, 4, 5]
         shardTotal: [5]
 
+    env:
+      TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -92,11 +96,11 @@ jobs:
           path: ./playwright-report
           retention-days: 14
 
-      - name: Send TestDino report
+      - name: Send report to TestDino
         env:
-          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
+          TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
         run: |
           npx tdpw ./playwright-report \
-            --token="$TDPW_TOKEN" \
+            --token="$TESTDINO_TOKEN" \
             --upload-html \
             --verbose
