@@ -1,13 +1,22 @@
 # SCENARIO: all-fail
-# 1000 tests — every test fails with one of 8 distinct error types.
-# continue-on-error: true so reports always upload even when all tests fail.
-# 5 shards x 4 workers. Triggers on push, pull_request, and manual dispatch.
+# 1000 tests — every test fails (8 distinct error types).
+# 5 shards x 4 workers. continue-on-error so reports always upload.
+# On manual dispatch: choose staging or production TestDino server.
 name: All Fail — 1000 Tests
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'TestDino target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
 
 jobs:
   run-tests:
@@ -22,36 +31,35 @@ jobs:
 
     env:
       TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_SERVER_URL: ${{ github.event.inputs.environment == 'production' && 'https://reporter.testdino.com' || 'https://stg-reporter.testdino.com' }}
       TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install deps + browsers
+      - name: Install latest TestDino Playwright package
         run: |
-          npm ci
-          npx playwright install --with-deps
+          npm install --no-save --package-lock=false @testdino/playwright@latest
+          npm ls @testdino/playwright --depth=0
 
-      # All tests fail by design — continue-on-error ensures report upload runs.
+      # All tests fail by design — continue-on-error ensures report upload always runs.
       - name: Run shard ${{ matrix.shardIndex }} — all-fail tests
         run: |
-          npx playwright test tests/all-fail.spec.ts \
+          npx tdpw test \
+            --ci-run-id "$TESTDINO_CI_RUN_ID" \
+            --server-url "$TESTDINO_SERVER_URL" \
+            -- tests/all-fail.spec.ts \
             --project=chromium \
             --workers=4 \
-            --reporter=blob \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         continue-on-error: true
 
@@ -61,6 +69,7 @@ jobs:
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: ./blob-report
+          if-no-files-found: ignore
           retention-days: 1
 
   merge-reports:
@@ -72,15 +81,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Install deps
-        run: |
-          npm ci
-          npx playwright install --with-deps
+      - name: Install dependencies
+        run: npm ci
 
       - name: Download all blob reports
         uses: actions/download-artifact@v4
@@ -90,21 +98,11 @@ jobs:
           merge-multiple: true
 
       - name: Merge reports
-        run: npx playwright merge-reports --config=playwright.config.ts ./all-blob-reports
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
 
-      - name: Upload combined report
+      - name: Upload final HTML report
         uses: actions/upload-artifact@v4
         with:
           name: Playwright-Report-All-Fail
           path: ./playwright-report
           retention-days: 14
-
-      - name: Send report to TestDino
-        if: always()
-        env:
-          TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
-        run: |
-          npx tdpw ./playwright-report \
-            --token="$TESTDINO_TOKEN" \
-            --upload-html \
-            --verbose

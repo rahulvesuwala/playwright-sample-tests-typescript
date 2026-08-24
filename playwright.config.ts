@@ -6,6 +6,12 @@ dotenv.config();
 
 const isCI = !!process.env.CI;
 
+// Server URL: reads from env so staging/prod can be switched via workflow_dispatch input.
+// Staging:    https://stg-reporter.testdino.com
+// Production: https://reporter.testdino.com
+const serverUrl =
+  process.env.TESTDINO_SERVER_URL || 'https://stg-reporter.testdino.com';
+
 // Use GitHub Actions Run ID in CI
 // Local runs will create a date-based run ID
 const ciRunId = isCI
@@ -30,7 +36,7 @@ const config: PlaywrightTestConfig = {
     [
       '@testdino/playwright',
       {
-        serverUrl: 'https://stg-analytics.testdino.com',
+        serverUrl: serverUrl,
         token: process.env.TESTDINO_TOKEN,
         ciRunId,
         debug: false,
