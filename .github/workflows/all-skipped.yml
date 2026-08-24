@@ -1,0 +1,102 @@
+# SCENARIO: all-skipped
+# 1000 tests — every test is skipped with one of 8 distinct skip reasons.
+# 5 shards x 4 workers. Triggers on push, pull_request, and manual dispatch.
+name: All Skipped — 1000 Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Run shard ${{ matrix.shardIndex }}/5
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run shard ${{ matrix.shardIndex }} — all-skipped tests
+        run: |
+          npx playwright test tests/all-skipped.spec.ts \
+            --project=chromium \
+            --workers=4 \
+            --reporter=blob \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: ./blob-report
+          retention-days: 1
+
+  merge-reports:
+    name: Merge Reports
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --config=playwright.config.ts ./all-blob-reports
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-Report-All-Skipped
+          path: ./playwright-report
+          retention-days: 14
+
+      - name: Send TestDino report
+        env:
+          TDPW_TOKEN: ${{ secrets.TDPW_TOKEN }}
+        run: |
+          npx tdpw ./playwright-report \
+            --token="$TDPW_TOKEN" \
+            --upload-html \
+            --verbose

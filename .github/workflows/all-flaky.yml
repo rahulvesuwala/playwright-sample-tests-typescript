@@ -1,34 +1,33 @@
-# SCENARIO: api-mock-5k-1x40
-# 5000 self-contained mocked API tests — no real network, no browser navigation.
-# Layout: 1 shard x 40 workers (single runner, maximum parallelism).
-# Triggers on push, pull_request, and manual dispatch.
-name: Scenario — API Mock 5K (1 shard x 40 workers)
+# SCENARIO: all-flaky
+# 1000 tests — every test is flaky (fails on attempt 0, passes on retry).
+# --retries=1 is required so flaky tests surface as "flaky" (not "fail") in TestDino.
+# continue-on-error: true so reports upload even if some retries are miscounted.
+# 5 shards x 4 workers. Triggers on push, pull_request, and manual dispatch.
+name: All Flaky — 1000 Tests
 
 on:
   push:
   pull_request:
   workflow_dispatch:
-    inputs:
-      mock_test_count:
-        description: 'Number of mock tests to generate (default: 5000)'
-        required: false
-        default: '5000'
 
 jobs:
   run-tests:
-    name: Run mocked API tests (1 shard, 40 workers)
+    name: Run shard ${{ matrix.shardIndex }}/5
     runs-on: ubuntu-latest
 
-    env:
-      MOCK_TEST_COUNT: ${{ github.event.inputs.mock_test_count || '5000' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Cache npm dependencies
         uses: actions/cache@v3
@@ -43,18 +42,22 @@ jobs:
           npm ci
           npx playwright install --with-deps
 
-      - name: Run mocked API tests (1x40)
+      # --retries=1 is essential: flaky tests fail attempt 0, pass on retry.
+      - name: Run shard ${{ matrix.shardIndex }} — all-flaky tests
         run: |
-          npx playwright test tests/api-mock.spec.ts \
+          npx playwright test tests/all-flaky.spec.ts \
             --project=chromium \
-            --workers=40 \
-            --reporter=blob
+            --workers=4 \
+            --retries=1 \
+            --reporter=blob \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        continue-on-error: true
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-api-mock-1x40
+          name: blob-report-${{ matrix.shardIndex }}
           path: ./blob-report
           retention-days: 1
 
@@ -67,25 +70,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install deps + browsers
+      - name: Install deps
         run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Download blob reports
+      - name: Download all blob reports
         uses: actions/download-artifact@v4
         with:
           path: ./all-blob-reports
@@ -98,7 +93,7 @@ jobs:
       - name: Upload combined report
         uses: actions/upload-artifact@v4
         with:
-          name: Playwright-Report-API-Mock-1x40
+          name: Playwright-Report-All-Flaky
           path: ./playwright-report
           retention-days: 14
 

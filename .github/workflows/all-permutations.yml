@@ -1,8 +1,10 @@
-# SCENARIO: ui-short-smoke
-# 50 small, fast UI interaction tests (~8-12s each).
-# 2 shards x 2 workers. ~8-10 min total wall-clock.
-# Triggers on push, pull_request, and manual dispatch.
-name: Scenario — UI Short Smoke
+# SCENARIO: all-permutations
+# 1000 tests covering all 15 combinations of pass/fail/flaky/skip statuses.
+# Each combination has its own describe block (~66 tests each).
+# --retries=1 required for flaky tests to surface correctly.
+# continue-on-error: true so reports upload despite intentional failures.
+# 5 shards x 4 workers. Triggers on push, pull_request, and manual dispatch.
+name: All Permutations — 1000 Tests (15 Combinations)
 
 on:
   push:
@@ -11,22 +13,22 @@ on:
 
 jobs:
   run-tests:
-    name: Run shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    name: Run shard ${{ matrix.shardIndex }}/5
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Cache npm dependencies
         uses: actions/cache@v3
@@ -41,12 +43,17 @@ jobs:
           npm ci
           npx playwright install --with-deps
 
-      - name: Run shard ${{ matrix.shardIndex }} (smoke tests)
+      # --retries=1: needed for flaky tests in permutation combos.
+      # continue-on-error: intentional failures should not block report upload.
+      - name: Run shard ${{ matrix.shardIndex }} — all-permutations tests
         run: |
-          npx playwright test tests/smoke.spec.ts \
+          npx playwright test tests/all-permutations.spec.ts \
             --project=chromium \
+            --workers=4 \
+            --retries=1 \
             --reporter=blob \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        continue-on-error: true
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
@@ -65,20 +72,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install deps + browsers
+      - name: Install deps
         run: |
           npm ci
           npx playwright install --with-deps
@@ -96,7 +95,7 @@ jobs:
       - name: Upload combined report
         uses: actions/upload-artifact@v4
         with:
-          name: Playwright-Report-UI-Smoke
+          name: Playwright-Report-All-Permutations
           path: ./playwright-report
           retention-days: 14
 
