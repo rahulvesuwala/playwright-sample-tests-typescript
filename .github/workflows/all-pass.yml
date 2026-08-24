@@ -60,6 +60,7 @@ jobs:
             -- tests/all-pass.spec.ts \
             --project=chromium \
             --workers=4 \
+            --reporter=blob \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload blob report
@@ -97,7 +98,13 @@ jobs:
           merge-multiple: true
 
       - name: Merge reports
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
+        run: |
+          if [ -d "./all-blob-reports" ] && [ "$(ls -A ./all-blob-reports 2>/dev/null)" ]; then
+            npx playwright merge-reports --reporter html ./all-blob-reports
+          else
+            echo "⚠️ No blob reports found — skipping HTML merge (TestDino received results live)"
+            mkdir -p playwright-report
+          fi
 
       - name: Upload final HTML report
         uses: actions/upload-artifact@v4
