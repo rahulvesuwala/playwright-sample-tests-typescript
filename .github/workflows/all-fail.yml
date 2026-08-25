@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
       - name: Install latest TestDino Playwright package
         run: |
           npm install --no-save --package-lock=false @testdino/playwright@latest
