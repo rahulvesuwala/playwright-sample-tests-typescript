@@ -34,6 +34,10 @@ jobs:
       TESTDINO_TOKEN: ${{ secrets.TESTDINO_API_TOKEN || secrets.TESTDINO_TOKEN }}
       TESTDINO_SERVER_URL: ${{ github.event.inputs.environment == 'production' && 'https://reporter.testdino.com' || 'https://stg-reporter.testdino.com' }}
       TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      USERNAME: ${{ secrets.USERNAME }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+      USERNAME1: ${{ secrets.USERNAME1 }}
+      NEW_PASSWORD: ${{ secrets.NEW_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4
