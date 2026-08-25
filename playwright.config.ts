@@ -42,7 +42,7 @@ const config: PlaywrightTestConfig = {
         token: process.env.TESTDINO_TOKEN,
         ciRunId,
         debug: false,
-        artifacts: false,
+        artifacts: true,
       },
     ],
     ['blob', { outputDir: 'blob-report' }],
