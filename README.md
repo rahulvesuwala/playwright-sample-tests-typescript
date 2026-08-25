@@ -46,7 +46,7 @@ A ready-to-run Playwright test repository with **5000 tests per scenario** cover
 
 ## 🧪 Scenarios & Workflows
 
-There are **5 scenarios**, each with its own spec file (1000 tests) and GitHub Actions workflow.
+There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub Actions workflow.
 
 ---
 
@@ -156,6 +156,28 @@ There are **5 scenarios**, each with its own spec file (1000 tests) and GitHub A
 
 ---
 
+### 🛡️ 6. Regression (UI Full Suite)
+
+> Full UI regression suite covering ecommerce, cart, catalog, and profile actions. Uses real web UI operations on the demo store backend.
+> 
+> **Screenshots & Traces Enabled:** Because this is a real UI scenario, screenshots, videos, and trace files are automatically captured on failure and uploaded to TestDino.
+
+| | |
+|---|---|
+| **Spec file** | `tests/regression.spec.ts` |
+| **Workflow file** | `.github/workflows/regression.yml` |
+| **Tests** | 1000 — E2E UI flows |
+| **Shards × Workers** | 10 shards × 5 workers |
+| **Traces & Media** | **Yes — automatically uploaded to TestDino on failure** |
+
+> [!TIP]
+> If a test in this scenario fails, you can open the TestDino run details, view the failure screenshot, and download or view the Playwright Trace file directly to see exactly what went wrong.
+
+**To run:** Go to Actions → `Regression — UI Full Suite` → Run workflow
+
+---
+
+
 ## ▶️ How to Run a Workflow
 
 ### Via GitHub UI (Manual Trigger)
@@ -183,14 +205,16 @@ playwright-sample-tests-typescript/
 │   ├── all-fail.spec.ts          # 1000 tests — all fail (8 error types)
 │   ├── all-flaky.spec.ts         # 1000 tests — all flaky (fail attempt 0, pass on retry)
 │   ├── all-skipped.spec.ts       # 1000 tests — all skipped (8 skip reasons)
-│   └── all-permutations.spec.ts  # 1000 tests — all 15 pass/fail/flaky/skip combos
+│   ├── all-permutations.spec.ts  # 1000 tests — all 15 pass/fail/flaky/skip combos
+│   └── regression.spec.ts        # 1000 tests — E2E UI full regression suite
 │
 ├── .github/workflows/
 │   ├── all-pass.yml              # Workflow: All Pass
 │   ├── all-fail.yml              # Workflow: All Fail
 │   ├── all-flaky.yml             # Workflow: All Flaky
 │   ├── all-skipped.yml           # Workflow: All Skipped
-│   └── all-permutations.yml      # Workflow: All Permutations
+│   ├── all-permutations.yml      # Workflow: All Permutations
+│   └── regression.yml            # Workflow: Regression
 │
 ├── playwright.config.ts          # Playwright config (TestDino reporter included)
 ├── package.json
@@ -236,6 +260,9 @@ npx playwright test tests/all-skipped.spec.ts --project=chromium --workers=4
 
 # All Permutations (retries required)
 npx playwright test tests/all-permutations.spec.ts --project=chromium --workers=4 --retries=1
+
+# Regression (UI Full Suite)
+npx playwright test tests/regression.spec.ts --project=chromium --workers=5
 ```
 
 ---
