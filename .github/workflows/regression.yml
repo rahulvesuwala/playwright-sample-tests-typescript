@@ -57,7 +57,7 @@ jobs:
           npx tdpw test \
             --ci-run-id "$TESTDINO_CI_RUN_ID" \
             --server-url "$TESTDINO_SERVER_URL" \
-            -- tests/ecommerce.spec.ts tests/large-regression-suite.spec.ts tests/regression-cart.spec.ts tests/regression-catalog.data.spec.ts tests/regression-extra.spec.ts \
+            -- tests/regression.spec.ts \
             --project=chromium \
             --workers=5 \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
