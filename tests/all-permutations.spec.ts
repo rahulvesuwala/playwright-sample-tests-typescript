@@ -37,7 +37,8 @@ function pass(i: number) {
 }
 
 async function fail(i: number) {
-  await failureModes[i % failureModes.length](i);
+  const mode = failureModes[i % failureModes.length]!;
+  await mode(i);
 }
 
 async function flaky(i: number, testInfo: any) {

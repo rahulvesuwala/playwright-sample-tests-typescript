@@ -49,7 +49,7 @@ const failureModes: FailMode[] = [
 
 for (let i = 0; i < TOTAL; i++) {
   const id = String(i + 1).padStart(width, '0');
-  const mode = failureModes[i % failureModes.length];
+  const mode = failureModes[i % failureModes.length]!;
 
   test(`all-fail #${id} — fails [${mode.label}]`, async () => {
     await mode.fn(i);

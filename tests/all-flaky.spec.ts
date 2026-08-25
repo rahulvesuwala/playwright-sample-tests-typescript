@@ -44,7 +44,7 @@ const flakyPatterns = [
 
 for (let i = 0; i < TOTAL; i++) {
   const id = String(i + 1).padStart(width, '0');
-  const pattern = flakyPatterns[i % flakyPatterns.length];
+  const pattern = flakyPatterns[i % flakyPatterns.length]!;
 
   test(`all-flaky #${id} — flaky (fails attempt 0, passes on retry, pattern ${(i % flakyPatterns.length) + 1})`, async ({}, testInfo) => {
     await pattern(testInfo, i);

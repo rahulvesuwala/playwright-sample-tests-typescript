@@ -25,7 +25,7 @@ const assertions = [
 
 for (let i = 0; i < TOTAL; i++) {
   const id = String(i + 1).padStart(width, '0');
-  const assert = assertions[i % assertions.length];
+  const assert = assertions[i % assertions.length]!;
 
   test(`all-pass #${id} — passes cleanly (variant ${(i % assertions.length) + 1})`, async () => {
     assert(i);

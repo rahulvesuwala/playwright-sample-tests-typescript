@@ -5,28 +5,29 @@ import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
 // --- Reuse Framework Infrastructure Helpers ---
-async function login(allPages: AllPages, username = process.env.USERNAME, password = process.env.PASSWORD) {
+async function login(allPages: AllPages, username = process.env.USERNAME || '', password = process.env.PASSWORD || '') {
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
   await allPages.loginPage.login(username, password);
 }
 
 async function logout(allPages: AllPages) {
-  await allPages.loginPage.page.waitForTimeout(1000);
+  await allPages.page.waitForTimeout(1000);
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.clickOnLogoutButton();
 }
 
 async function registerAndLogin(allPages: AllPages) {
   const email = `test+${Date.now()}+${Math.floor(Math.random() * 100000)}@enterprise.com`;
+  const password = process.env.PASSWORD || '';
   await allPages.loginPage.clickOnUserProfileIcon();
   await allPages.loginPage.validateSignInPage();
   await allPages.loginPage.clickOnSignupLink();
   await allPages.signupPage.assertSignupPage();
-  await allPages.signupPage.signup('Enterprise', 'User', email, process.env.PASSWORD);
+  await allPages.signupPage.signup('Enterprise', 'User', email, password);
   await allPages.signupPage.verifySuccessSignUp();
   await allPages.loginPage.validateSignInPage();
-  await allPages.loginPage.login(email, process.env.PASSWORD);
+  await allPages.loginPage.login(email, password);
   await allPages.loginPage.verifySuccessSignIn();
   return email;
 }
@@ -42,22 +43,22 @@ const couponCodes = ['ENTERPRISE10', 'PROMO20', 'FREESHIP', 'SUMMER50', 'DISCOUN
 // ============================================================================
 for (let i = 1; i <= 250; i++) {
   const paddedId = String(i).padStart(4, '0');
-  const keyword = searchKeywords[i % searchKeywords.length];
-  const category = targetCategories[i % targetCategories.length];
-  const sortMode = sortingModes[i % sortingModes.length];
-  const coupon = couponCodes[i % couponCodes.length];
+  const keyword = searchKeywords[i % searchKeywords.length] || '';
+  const category = targetCategories[i % targetCategories.length] || '';
+  const sortMode = sortingModes[i % sortingModes.length] || '';
+  const coupon = couponCodes[i % couponCodes.length] || '';
 
   test(`TC-${paddedId} Verify full E2E shopping catalog and order placement pipeline - Variation #${i}`, async ({ allPages }) => {
     await test.step('Step 1: Authenticate active profile session and navigate inventory matrix', async () => {
       await login(allPages);
-      await allPages.productPage.clickOnShopNowButton();
-      await allPages.productPage.clickOnAllProductsLink();
+      await allPages.inventoryPage.clickOnShopNowButton();
+      await allPages.inventoryPage.clickOnAllProductsLink();
     });
 
     await test.step(`Step 2: Apply discovery filters for Category: ${category} and Sort: ${sortMode}`, async () => {
-      await allPages.searchPage.searchProduct(keyword);
-      await allPages.searchPage.verifyProductTitleVisible(keyword);
-      await allPages.productPage.clickOnAddToCartIcon();
+      await allPages.inventoryPage.searchProduct(keyword);
+      await allPages.inventoryPage.verifyProductTitleVisible(keyword);
+      await allPages.inventoryPage.clickOnAddToCartIcon();
     });
 
     await test.step(`Step 3: Update item allocation volumes and apply promotional voucher: ${coupon}`, async () => {
@@ -93,30 +94,30 @@ for (let i = 251; i <= 500; i++) {
     });
 
     await test.step('Step 2: Append brand new enterprise shipping configuration schemas to profile mapping', async () => {
-      await allPages.profilePage.clickOnUserProfileIcon();
-      await allPages.profilePage.clickOnAddressTab();
-      await allPages.profilePage.clickOnAddAddressButton();
-      await allPages.profilePage.fillAddressForm();
-      await allPages.profilePage.verifytheAddressIsAdded();
+      await allPages.userPage.clickOnUserProfileIcon();
+      await allPages.userPage.clickOnAddressTab();
+      await allPages.userPage.clickOnAddAddressButton();
+      await allPages.userPage.fillAddressForm();
+      await allPages.userPage.verifytheAddressIsAdded();
     });
 
     await test.step('Step 3: Mutate existing metadata layers and execute immediate persistence updates', async () => {
-      await allPages.profilePage.clickOnEditAddressButton();
-      await allPages.profilePage.updateAddressForm();
-      await allPages.profilePage.verifytheUpdatedAddressIsAdded();
+      await allPages.userPage.clickOnEditAddressButton();
+      await allPages.userPage.updateAddressForm();
+      await allPages.userPage.verifytheUpdatedAddressIsAdded();
     });
 
     await test.step('Step 4: Trigger standard communication protocols using the official Support channels', async () => {
-      await allPages.contactPage.clickOnContactUsLink();
-      await allPages.contactPage.assertContactUsTitle();
-      await allPages.contactPage.fillContactUsForm();
-      await allPages.contactPage.verifySuccessContactUsFormSubmission();
+      await allPages.homePage.clickOnContactUsLink();
+      await allPages.contactUsPage.assertContactUsTitle();
+      await allPages.contactUsPage.fillContactUsForm();
+      await allPages.contactUsPage.verifySuccessContactUsFormSubmission();
     });
 
     await test.step('Step 5: Revoke generated storage layouts to return data state back to base baseline', async () => {
-      await allPages.profilePage.clickOnUserProfileIcon();
-      await allPages.profilePage.clickOnAddressTab();
-      await allPages.profilePage.clickOnDeleteAddressButton();
+      await allPages.userPage.clickOnUserProfileIcon();
+      await allPages.userPage.clickOnAddressTab();
+      await allPages.userPage.clickOnDeleteAddressButton();
       await logout(allPages);
     });
   });
@@ -125,34 +126,32 @@ for (let i = 251; i <= 500; i++) {
 // ============================================================================
 // BLOCK 3: TC-0501 TO TC-0750 (Wishlist Mechanics, Cross-Page Interactions & Reviews)
 // ============================================================================
-for (let i = 510; i <= 750; i++) {
-  // Direct normalizer to align index strictly with requested boundaries
-  const currentId = i - 9; 
-  const paddedId = String(currentId).padStart(4, '0');
-  const keyword = searchKeywords[currentId % searchKeywords.length];
+for (let i = 501; i <= 750; i++) {
+  const paddedId = String(i).padStart(4, '0');
+  const keyword = searchKeywords[i % searchKeywords.length] || '';
 
-  test(`TC-${paddedId} Verify user storage layers, item transitions, and customer feedback boards - Variation #${currentId}`, async ({ allPages }) => {
+  test(`TC-${paddedId} Verify user storage layers, item transitions, and customer feedback boards - Variation #${i}`, async ({ allPages }) => {
     await test.step('Step 1: Instantiate user instance space and access discovery pages', async () => {
       await login(allPages);
     });
 
     await test.step(`Step 2: Isolate inventory item coordinates tracking down keyword query: ${keyword}`, async () => {
-      await allPages.productPage.clickOnShopNowButton();
+      await allPages.inventoryPage.clickOnShopNowButton();
       await allPages.allProductsPage.assertAllProductsTitle();
-      await allPages.searchPage.searchProduct(keyword);
+      await allPages.inventoryPage.searchProduct(keyword);
     });
 
     await test.step('Step 3: Handle persistent catalog collections staging parameters inside Wishlist maps', async () => {
-      await allPages.wishlistPage.addToWishlist();
-      await allPages.wishlistPage.assertWishlistIcon();
-      await allPages.wishlistPage.clickOnWishlistIconHeader();
+      await allPages.inventoryPage.addToWishlist();
+      await allPages.inventoryPage.assertWishlistIcon();
+      await allPages.inventoryPage.clickOnWishlistIconHeader();
     });
 
     await test.step('Step 4: Publish authentic verification summaries into the public interaction reviews layer', async () => {
-      await allPages.productPage.clickNthProduct(1);
-      await allPages.reviewPage.clickOnReviewsTab();
-      await allPages.reviewPage.clickOnWriteAReviewBtn();
-      await allPages.reviewPage.fillReviewForm();
+      await allPages.allProductsPage.clickNthProduct(1);
+      await allPages.productDetailsPage.clickOnReviewsTab();
+      await allPages.productDetailsPage.clickOnWriteAReviewBtn();
+      await allPages.productDetailsPage.fillReviewForm();
     });
 
     await test.step('Step 5: Unload application browser states and run teardown sequences', async () => {
@@ -166,7 +165,7 @@ for (let i = 510; i <= 750; i++) {
 // ============================================================================
 for (let i = 751; i <= 1000; i++) {
   const paddedId = String(i).padStart(4, '0');
-  const keyword = searchKeywords[i % searchKeywords.length];
+  const keyword = searchKeywords[i % searchKeywords.length] || '';
 
   test(`TC-${paddedId} Verify transactional tracking pipelines and lifecycle purchase cancellations - Variation #${i}`, async ({ allPages }) => {
     let internalUserMail: string;
@@ -176,9 +175,9 @@ for (let i = 751; i <= 1000; i++) {
     });
 
     await test.step(`Step 2: Collect target products from live display panels via index string: ${keyword}`, async () => {
-      await allPages.productPage.clickOnAllProductsLink();
-      await allPages.searchPage.searchProduct(keyword);
-      await allPages.productPage.clickOnAddToCartIcon();
+      await allPages.inventoryPage.clickOnAllProductsLink();
+      await allPages.inventoryPage.searchProduct(keyword);
+      await allPages.inventoryPage.clickOnAddToCartIcon();
     });
 
     await test.step('Step 3: Advance data frames into active billing modules and construct shipping addresses', async () => {
@@ -195,10 +194,10 @@ for (let i = 751; i <= 1000; i++) {
     });
 
     await test.step('Step 5: Enforce immediate execution cancellation rules to clear ledger allocation queues', async () => {
-      await allPages.ordersPage.clickOnMyOrdersTab();
-      await allPages.ordersPage.clickCancelOrderButton(1);
-      await allPages.ordersPage.confirmCancellation();
-      await allPages.ordersPage.verifyCancellationConfirmationMessage();
+      await allPages.orderPage.clickOnMyOrdersTab();
+      await allPages.orderPage.clickCancelOrderButton(1);
+      await allPages.orderPage.confirmCancellation();
+      await allPages.orderPage.verifyCancellationConfirmationMessage();
       await logout(allPages);
     });
   });
