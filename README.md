@@ -62,7 +62,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 | **Shards × Workers** | 5 shards × 4 workers |
 | **Retries needed** | No |
 
-**To run:** Go to Actions → `All Pass — 1000 Tests` → Run workflow
+**To run via UI:** Go to Actions → `All Pass — 1000 Tests` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/all-pass.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
@@ -81,7 +92,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 > [!NOTE]
 > The workflow uses `continue-on-error: true` so the report always uploads even though all tests fail.
 
-**To run:** Go to Actions → `All Fail — 1000 Tests` → Run workflow
+**To run via UI:** Go to Actions → `All Fail — 1000 Tests` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/all-fail.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
@@ -100,7 +122,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 > [!IMPORTANT]
 > Retries must be enabled (`--retries=1`) for tests to show as **flaky** instead of **fail** in TestDino. The workflow already handles this.
 
-**To run:** Go to Actions → `All Flaky — 1000 Tests` → Run workflow
+**To run via UI:** Go to Actions → `All Flaky — 1000 Tests` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/all-flaky.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
@@ -116,7 +149,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 | **Shards × Workers** | 5 shards × 4 workers |
 | **Retries needed** | No |
 
-**To run:** Go to Actions → `All Skipped — 1000 Tests` → Run workflow
+**To run via UI:** Go to Actions → `All Skipped — 1000 Tests` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/all-skipped.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
@@ -152,7 +196,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 | 14 | Fail + Flaky + Skip |
 | 15 | Pass + Fail + Flaky + Skip |
 
-**To run:** Go to Actions → `All Permutations — 1000 Tests (15 Combinations)` → Run workflow
+**To run via UI:** Go to Actions → `All Permutations — 1000 Tests (15 Combinations)` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/all-permutations.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
@@ -173,7 +228,18 @@ There are **6 scenarios**, each with its own spec file (1000 tests) and GitHub A
 > [!TIP]
 > If a test in this scenario fails, you can open the TestDino run details, view the failure screenshot, and download or view the Playwright Trace file directly to see exactly what went wrong.
 
-**To run:** Go to Actions → `Regression — UI Full Suite` → Run workflow
+**To run via UI:** Go to Actions → `Regression — UI Full Suite` → Run workflow
+
+**To run via API (Curl):**
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/rahulvesuwala/playwright-sample-tests-typescript/actions/workflows/regression.yml/dispatches \
+  -d '{"ref":"main","inputs":{"environment":"staging"}}'
+```
+*(Note: Replace `YOUR_GITHUB_TOKEN` with your GitHub PAT; change `"staging"` to `"production"` in inputs payload to run on production)*
 
 ---
 
