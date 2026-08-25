@@ -40,7 +40,7 @@ A ready-to-run Playwright test repository with **5000 tests per scenario** cover
 |---|---|
 | `TESTDINO_TOKEN` | Your TestDino API token |
 
-> Get your token from: [TestDino Dashboard → Settings → API Token](https://testdino.com)
+> Get your token by following the guide here: [TestDino - Generate API Keys](https://docs.testdino.com/guides/generate-api-keys)
 
 ---
 
