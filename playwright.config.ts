@@ -6,11 +6,19 @@ dotenv.config();
 
 const isCI = !!process.env.CI;
 
+// Server URL: reads from env so staging/prod can be switched via workflow_dispatch input.
+// Staging:    https://stg-reporter.testdino.com
+// Production: https://reporter.testdino.com
+const serverUrl =
+  process.env.TESTDINO_SERVER_URL || 'https://stg-reporter.testdino.com';
+
 // Use GitHub Actions Run ID in CI
 // Local runs will create a date-based run ID
-const ciRunId = isCI
-  ? `ci-run-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || 1}`
-  : `local-run-${new Date().toISOString().split('T')[0]}`;
+const ciRunId =
+  process.env.TESTDINO_CI_RUN_ID ||
+  (isCI
+    ? `ci-run-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || 1}`
+    : `local-run-${new Date().toISOString().split('T')[0]}`);
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
@@ -18,7 +26,7 @@ const config: PlaywrightTestConfig = {
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
-  workers: isCI ? 1 : undefined,
+  workers: isCI ? 1 : 4,
 
   timeout: 60 * 1000,
 
@@ -30,11 +38,11 @@ const config: PlaywrightTestConfig = {
     [
       '@testdino/playwright',
       {
-        serverUrl: 'https://stg-analytics.testdino.com',
+        serverUrl: serverUrl,
         token: process.env.TESTDINO_TOKEN,
         ciRunId,
         debug: false,
-        artifacts: false,
+        artifacts: true,
       },
     ],
     ['blob', { outputDir: 'blob-report' }],
@@ -42,12 +50,13 @@ const config: PlaywrightTestConfig = {
   ],
 
   use: {
-    baseURL: 'https://storedemo.testdino.com/',
+    baseURL: 'https://storedemo.testdino.com/products',
     headless: true,
-    actionTimeout: 30 * 1000,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    actionTimeout: 15 * 1000,
+    navigationTimeout: 30 * 1000,
   },
 
   projects: [

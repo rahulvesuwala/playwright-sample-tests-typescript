@@ -1,0 +1,63 @@
+# SCENARIO: all-skipped
+# 1000 tests — every test is intentionally skipped (8 distinct reasons).
+# 5 shards x 4 workers.
+# On manual dispatch: choose staging or production TestDino server.
+name: All Skipped — 1000 Tests
+
+on:
+  # push:
+  # pull_request:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'TestDino target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  run-tests:
+    name: Run shard ${{ matrix.shardIndex }}/5
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
+
+    env:
+      TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+      TESTDINO_SERVER_URL: ${{ github.event.inputs.environment == 'production' && 'https://reporter.testdino.com' || 'https://stg-reporter.testdino.com' }}
+      TESTDINO_CI_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install latest TestDino Playwright package
+        run: |
+          npm install --no-save --package-lock=false @testdino/playwright@latest
+          npm ls @testdino/playwright --depth=0
+
+      - name: Run shard ${{ matrix.shardIndex }} — all-skipped tests
+        env:
+          TESTDINO_TOKEN: ${{ secrets.TESTDINO_TOKEN }}
+        run: |
+          npx playwright test tests/all-skipped.spec.ts \
+            --project=chromium \
+            --workers=4 \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
